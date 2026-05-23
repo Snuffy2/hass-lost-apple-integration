@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -76,7 +75,7 @@ async def async_setup_entry(
 class LostAppleDeviceTracker(CoordinatorEntity[LostAppleCoordinator], TrackerEntity):
     """Represent one tracked Apple Find My device."""
 
-    _attr_source_type = SourceType.GPS
+    _attr_source_type: str = "gps"  # type: ignore[assignment]
 
     def __init__(
         self,
@@ -90,7 +89,7 @@ class LostAppleDeviceTracker(CoordinatorEntity[LostAppleCoordinator], TrackerEnt
         self._fallback_name = device_name
         self._attr_unique_id = f"lost_apple_{device_id}_tracker"
         self._attr_name = device_name
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info: DeviceInfo = DeviceInfo(  # type: ignore[assignment]
             identifiers={(DOMAIN, device_id)},
             name=device_name,
         )
@@ -104,7 +103,7 @@ class LostAppleDeviceTracker(CoordinatorEntity[LostAppleCoordinator], TrackerEnt
         return _float_value(device, "latitude")
 
     @property
-    def location_accuracy(self) -> float | None:
+    def location_accuracy(self) -> float | None:  # type: ignore[override]
         """Return the latest device location accuracy in meters."""
         device = self._current_device
         if device is None:

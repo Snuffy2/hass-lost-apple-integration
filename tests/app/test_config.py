@@ -34,12 +34,7 @@ def _assert_equal(actual: object, expected: object, message: str) -> None:
     """Raise assertion failures with a message format consistent with project style."""
     if actual != expected:
         equality_error = (
-            message
-            + " (got="
-            + repr(actual)
-            + ", expected="
-            + repr(expected)
-            + ")"
+            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         )
         raise AssertionError(equality_error)
 

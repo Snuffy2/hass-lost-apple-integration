@@ -45,10 +45,14 @@ def _missing_pairing_token_error() -> ValueError:
 def resolve_pairing_token(environment: Mapping[str, str] | None = None) -> str:
     """Resolve pairing token from env override or HA options file."""
     if environment is None:
-        environment = {key: value for key in (
-            "LOST_APPLE_PAIRING_TOKEN",
-            "LOST_APPLE_OPTIONS_PATH",
-        ) if (value := getenv(key)) is not None}
+        environment = {
+            key: value
+            for key in (
+                "LOST_APPLE_PAIRING_TOKEN",
+                "LOST_APPLE_OPTIONS_PATH",
+            )
+            if (value := getenv(key)) is not None
+        }
 
     explicit_token = environment.get("LOST_APPLE_PAIRING_TOKEN")
     if explicit_token is not None:

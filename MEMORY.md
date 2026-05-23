@@ -182,3 +182,22 @@ pytest...................................................................Failed
   -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
   ============================== 1 warning in 0.00s ==============================
 ```
+
+## Task 10 Verification Follow-up (2026-05-23)
+
+Ran the required full verification commands after resolving Task 10 follow-ups:
+
+- `./.venv/bin/ruff check .`
+  - PASS
+- `./.venv/bin/ruff format --check .`
+  - PASS
+- `./.venv/bin/mypy app/src custom_components tests`
+  - PASS (after adding repository-root `mypy.ini` with `explicit_package_bases = true`, `python_version = 3.14`, and `mypy_path = app/src`)
+- `./.venv/bin/pytest`
+  - PASS
+  - 43 passed
+
+Additional follow-up edits made:
+- Added `mypy.ini` to normalize mypy module-path behavior and avoid duplicate-module discovery.
+- Adjusted typing annotations in `custom_components/lost_apple/diagnostics.py`, `custom_components/lost_apple/device_tracker.py`, and `tests/integration/test_config_flow.py` to satisfy strict checks under the current dependency typing surface.
+- Removed obsolete `[tool.mypy]` section from `pyproject.toml` after moving mypy settings to `mypy.ini`.

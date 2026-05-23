@@ -29,16 +29,13 @@ def _assert_status_and_markup(response_text: str, response_status: int) -> None:
     """Validate setup response status and required markup fragments."""
     if response_status != HTTP_STATUS_OK:
         status_error = (
-            "Setup route should return HTTP 200."
-            f" Got {response_status!r} instead."
+            f"Setup route should return HTTP 200. Got {response_status!r} instead."
         )
         raise AssertionError(status_error)
 
     for fragment in _make_expected_fragments():
         if fragment not in response_text:
-            fragment_error = (
-                f"Setup page body is missing required fragment: {fragment}"
-            )
+            fragment_error = f"Setup page body is missing required fragment: {fragment}"
             raise AssertionError(fragment_error)
 
     if HACS_INSTALL_URL not in response_text:

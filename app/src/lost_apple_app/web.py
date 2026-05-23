@@ -24,7 +24,7 @@ def register_web_routes(app: FastAPI) -> None:
         return (
             "<!doctype html>"
             '<html lang="en">'
-            '<head>'
+            "<head>"
             '<meta charset="utf-8">'
             "<title>Lost Apple Setup</title>"
             "</head>"

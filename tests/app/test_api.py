@@ -85,15 +85,11 @@ def _assert_response_payload(
 ) -> None:
     """Raise an AssertionError when response status or payload does not match."""
     if response_status != expected_status:
-        status_mismatch = (
-            f"{error_message} (unexpected status: {response_status})"
-        )
+        status_mismatch = f"{error_message} (unexpected status: {response_status})"
         raise AssertionError(status_mismatch)
 
     if response_payload != expected_payload:
-        payload_mismatch = (
-            f"{error_message} (unexpected payload: {response_payload})"
-        )
+        payload_mismatch = f"{error_message} (unexpected payload: {response_payload})"
         raise AssertionError(payload_mismatch)
 
 

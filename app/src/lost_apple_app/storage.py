@@ -13,23 +13,18 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 CREATE_SNAPSHOTS_TABLE_SQL = (
-    "CREATE TABLE IF NOT EXISTS snapshots "
-    "(id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+    "CREATE TABLE IF NOT EXISTS snapshots (id TEXT PRIMARY KEY, payload TEXT NOT NULL)"
 )
 CREATE_SETTINGS_TABLE_SQL = (
-    "CREATE TABLE IF NOT EXISTS settings "
-    "(key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+    "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
 )
-UPSERT_SNAPSHOT_SQL = (
-    "INSERT OR REPLACE INTO snapshots (id, payload) VALUES (?, ?)"
-)
+UPSERT_SNAPSHOT_SQL = "INSERT OR REPLACE INTO snapshots (id, payload) VALUES (?, ?)"
 SET_POLLING_INTERVAL_SQL = (
     "INSERT OR REPLACE INTO settings "
     "(key, value) VALUES ('polling_interval_minutes', ?)"
 )
 SELECT_POLLING_INTERVAL_SQL = (
-    "SELECT value FROM settings "
-    "WHERE key = 'polling_interval_minutes'"
+    "SELECT value FROM settings WHERE key = 'polling_interval_minutes'"
 )
 POLLING_INTERVAL_MIN_MINUTES = 5
 POLLING_INTERVAL_MAX_MINUTES = 60
@@ -69,9 +64,7 @@ class AppStorage:
 
     async def set_polling_interval_minutes(self, value: int) -> None:
         """Persist polling interval in minutes."""
-        if not (
-            POLLING_INTERVAL_MIN_MINUTES <= value <= POLLING_INTERVAL_MAX_MINUTES
-        ):
+        if not (POLLING_INTERVAL_MIN_MINUTES <= value <= POLLING_INTERVAL_MAX_MINUTES):
             msg = (
                 "Polling interval must be between "
                 f"{POLLING_INTERVAL_MIN_MINUTES} and "

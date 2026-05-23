@@ -10,12 +10,7 @@ def _assert_state(actual: object, expected: object, message: str) -> None:
     """Raise an assertion error when auth classification differs."""
     if actual is not expected:
         error_message = (
-            message
-            + " (got="
-            + repr(actual)
-            + ", expected="
-            + repr(expected)
-            + ")"
+            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         )
         raise AssertionError(error_message)
 

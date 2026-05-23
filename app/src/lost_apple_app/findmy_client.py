@@ -31,14 +31,15 @@ class _RollingKeySource(Protocol):
 
 type _FindMySourceKey = _HashedPublicKey | _RollingKeySource
 
+
 class _FindMyAccount(Protocol):
     """FindMy account protocol used by this adapter."""
 
     def fetch_location(
         self,
         key: _FindMySourceKey,
-    ) -> Awaitable[_FindMyLocationReport | None]:
-        ...
+    ) -> Awaitable[_FindMyLocationReport | None]: ...
+
 
 class _FindMyLocationReport(Protocol):
     """Protocol for a FindMy.py location report."""

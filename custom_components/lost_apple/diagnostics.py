@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import cast
+from typing import Any, cast
 
 _REDACTED_VALUE = "**REDACTED**"
 _SENSITIVE_KEYS: frozenset[str] = frozenset(
@@ -35,7 +35,7 @@ def _redact_payload_value(value: object) -> object:
     return value
 
 
-def redact_diagnostics(payload: dict[str, object]) -> dict[str, object]:
+def redact_diagnostics(payload: Mapping[str, object]) -> dict[str, Any]:
     """Return diagnostics payload with credentials scrubbed.
 
     Args:
@@ -46,4 +46,4 @@ def redact_diagnostics(payload: dict[str, object]) -> dict[str, object]:
         ``"**REDACTED**"``.
 
     """
-    return cast("dict[str, object]", _redact_payload_value(payload))
+    return cast("dict[str, Any]", _redact_payload_value(payload))

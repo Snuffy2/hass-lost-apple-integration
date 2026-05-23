@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.helpers import entity_registry as er
@@ -25,12 +25,7 @@ def _assert_equal(actual: object, expected: object, message: str) -> None:
     """Raise an AssertionError when two values do not match."""
     if actual != expected:
         equality_error = (
-            message
-            + " (got="
-            + repr(actual)
-            + ", expected="
-            + repr(expected)
-            + ")"
+            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         )
         raise AssertionError(equality_error)
 
@@ -209,7 +204,7 @@ async def test_config_flow_uses_password_selector_for_pairing_token(
         context={"source": "user"},
     )
 
-    data_schema = result["data_schema"]
+    data_schema = cast("Any", result["data_schema"])
     selector = data_schema.schema["pairing_token"]
 
     _assert_equal(

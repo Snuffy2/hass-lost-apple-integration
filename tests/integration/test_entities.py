@@ -28,12 +28,7 @@ def _assert_equal(actual: object, expected: object, message: str) -> None:
     """Raise an AssertionError when two values do not match."""
     if actual != expected:
         equality_error = (
-            message
-            + " (got="
-            + repr(actual)
-            + ", expected="
-            + repr(expected)
-            + ")"
+            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         )
         raise AssertionError(equality_error)
 
@@ -116,8 +111,7 @@ async def _setup_entry_with_snapshot(hass: HomeAssistant) -> ConfigEntry:
         actual=setup_result,
         expected=True,
         message=(
-            "Lost Apple config entry should load during flow creation "
-            "for entity tests"
+            "Lost Apple config entry should load during flow creation for entity tests"
         ),
     )
     return entry
@@ -133,8 +127,7 @@ def _get_state_by_unique_id(
     entity_id = entity_registry.async_get_entity_id(entity_domain, DOMAIN, unique_id)
     if entity_id is None:
         message = (
-            "Entity registry is missing "
-            f"{entity_domain} with unique ID {unique_id!r}"
+            f"Entity registry is missing {entity_domain} with unique ID {unique_id!r}"
         )
         raise AssertionError(message)
 
@@ -224,8 +217,7 @@ async def test_config_entry_uses_runtime_data_and_unloads_cleanly(
         actual=isinstance(entry.runtime_data, LostAppleCoordinator),
         expected=True,
         message=(
-            "Lost Apple config entry should expose its coordinator "
-            "via runtime_data"
+            "Lost Apple config entry should expose its coordinator via runtime_data"
         ),
     )
     _assert_equal(
