@@ -1,6 +1,6 @@
 # Development
 
-Create or refresh the local virtual environment:
+Create or refresh the local Python 3.14 virtual environment:
 
 ```bash
 python3 -m venv .venv

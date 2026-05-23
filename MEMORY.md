@@ -201,3 +201,28 @@ Additional follow-up edits made:
 - Added `mypy.ini` to normalize mypy module-path behavior and avoid duplicate-module discovery.
 - Adjusted typing annotations in `custom_components/lost_apple/diagnostics.py`, `custom_components/lost_apple/device_tracker.py`, and `tests/integration/test_config_flow.py` to satisfy strict checks under the current dependency typing surface.
 - Removed obsolete `[tool.mypy]` section from `pyproject.toml` after moving mypy settings to `mypy.ini`.
+
+## Task 10 Python Runtime Alignment Follow-up (2026-05-23)
+
+Aligned the project runtime/tooling contract to Python 3.14 after review found `mypy.ini` was using Python 3.14 while package metadata, Ruff, CI, and the App Dockerfile still advertised Python 3.13. Keeping mypy at Python 3.13 was not viable with the installed `homeassistant` 2026.5 dependency, because that package includes Python 3.14-only syntax in its installed code.
+
+Updated:
+- `pyproject.toml` now requires Python `>=3.14`.
+- `pyproject.toml` Ruff target is `py314`.
+- `mypy.ini` uses `python_version = 3.14`.
+- `.github/workflows/ci.yml` uses Python `3.14`.
+- `app/lost_apple/Dockerfile` uses `python:3.14-slim`.
+- `docs/development.md` documents the local Python 3.14 environment.
+
+Re-ran the required full verification commands:
+- `./.venv/bin/ruff check .`
+  - PASS
+- `./.venv/bin/ruff format --check .`
+  - PASS
+  - 33 files already formatted
+- `./.venv/bin/mypy app/src custom_components tests`
+  - PASS
+  - Success: no issues found in 33 source files
+- `./.venv/bin/pytest`
+  - PASS
+  - 43 passed, 13 warnings
