@@ -118,47 +118,38 @@ collected 0 items
 `./.venv/bin/prek run --all-files`
 
 ```text
-ruff.....................................................................Failed
-- hook id: ruff
-- exit code: 1
-
-  invalid-syntax: Expected an expression
-   --> .github/workflows/ci.yml:3:4
-
-  ...
-  .venv/lib/python3.14/site-packages/_pytest/config/__init__.py:1581: PytestConfigWarning: No files were found in testpaths; consider removing or adjusting your testpaths configuration. Searching recursively from the current directory instead.
-    self.args, self.args_source = self._decide_args(
-
-  -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-  ============================== 1 warning in 0.00s ==============================
-
-ruff-format..................................................................Failed
-- hook id: ruff-format
-- exit code: 2
-
-  error: Failed to parse .github/workflows/ci.yml:3:4: Expected an expression
-  error: Failed to parse .gitignore:1:1: Expected a statement
-  error: Failed to format AGENTS.md: Markdown formatting is experimental, enable preview mode.
-  error: Failed to format MEMORY.md: Markdown formatting is experimental, enable preview mode.
-  ...
-
+ruff.................................................(no files to check)Skipped
+ruff-format..........................................(no files to check)Skipped
 mypy.....................................................................Failed
 - hook id: mypy
 - exit code: 2
 
   custom_components: error: Duplicate module named "__main__" (also at "app/src")
-  ...
+  custom_components: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#mapping-file-paths-to-modules for more info
+  custom_components: note: Common resolutions include:
+  custom_components: note:     a) using `--exclude` to avoid checking one of them,
+  custom_components: note:     b) adding `__init__.py` somewhere,
+  custom_components: note:     c) using `--explicit-package-bases` or adjusting `MYPYPATH`
+  Found 1 error in 1 file (errors prevented further checking)
 
-pytest....................................................................Failed
+pytest...................................................................Failed
 - hook id: pytest
 - exit code: 5
 
   ============================= test session starts ==============================
-  ...
+  platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0
+  rootdir: /Users/snuffy2/GitHub/hass-lost-apple
+  configfile: pyproject.toml
+  plugins: asyncio-1.3.0, anyio-4.13.0
+  asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
   collected 0 items
-  ============================== 1 warning in 0.00s ==============================
 
-  
-Skipped: no code changes in hook `ruff` and hook `ruff-format` were applied.
+  =============================== warnings summary ===============================
+  .venv/lib/python3.14/site-packages/_pytest/config/__init__.py:1581
+    /Users/snuffy2/GitHub/hass-lost-apple/.venv/lib/python3.14/site-packages/_pytest/config/__init__.py:1581: PytestConfigWarning: No files were found in testpaths; consider removing or adjusting your testpaths configuration. Searching recursively from the current directory instead.
+      self.args, self.args_source = self._decide_args(
+
+  -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+  ============================== 1 warning in 0.00s ==============================
 ```
 ```
