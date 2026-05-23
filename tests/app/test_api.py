@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+import pytest
 from fastapi.testclient import TestClient
 from lost_apple_app.api import create_app
 from lost_apple_app.models import DeviceSnapshot
@@ -22,6 +23,8 @@ API_VERSION = 1
 HTTP_STATUS_OK = 200
 HTTP_STATUS_UNAUTHORIZED = 401
 INVALID_TOKEN_ERROR = "Invalid pairing token"  # noqa: S105
+EMPTY_STRING = ""
+WHITESPACE_TOKEN = "   "  # noqa: S105
 DEVICE_ID = "airtag-001"
 DEVICE_NAME = "Keys"
 LATITUDE = 40.7128
@@ -158,6 +161,51 @@ async def test_health_endpoint_returns_expected_payload(tmp_path: Path) -> None:
             "device_count": 1,
         },
         error_message="Health payload should include app status metadata",
+    )
+
+
+@pytest.mark.parametrize(
+    "pairing_token",
+    [
+        EMPTY_STRING,
+        WHITESPACE_TOKEN,
+    ],
+)
+def test_create_app_rejects_blank_pairing_tokens(
+    tmp_path: Path,
+    pairing_token: str,
+) -> None:
+    """App factory rejects empty or whitespace-only pairing tokens."""
+    storage = AppStorage(tmp_path / "lost_apple.sqlite3")
+    with pytest.raises(ValueError, match="pairing_token must be a non-empty value"):
+        create_app(
+            storage=storage,
+            pairing_token=pairing_token,
+            app_version=APP_VERSION,
+        )
+
+
+async def test_empty_bearer_token_is_rejected(tmp_path: Path) -> None:
+    """Empty bearer token does not authenticate even when configured token is valid."""
+    storage = AppStorage(tmp_path / "lost_apple.sqlite3")
+    await storage.initialize()
+    app = create_app(
+        storage=storage,
+        pairing_token=VALID_CREDENTIAL,
+        app_version=APP_VERSION,
+    )
+    client = TestClient(app)
+
+    empty_token_response = client.get(
+        "/api/v1/health",
+        headers=_make_auth_headers(token=EMPTY_STRING),
+    )
+    _assert_response_payload(
+        response_status=empty_token_response.status_code,
+        expected_status=HTTP_STATUS_UNAUTHORIZED,
+        response_payload=empty_token_response.json(),
+        expected_payload={"detail": INVALID_TOKEN_ERROR},
+        error_message="Empty bearer token should be rejected",
     )
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 from collections.abc import Awaitable, Callable  # noqa: TC003
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,9 @@ INVALID_TOKEN_MESSAGE = "Invalid pairing token"  # noqa: S105
 
 def create_app(storage: AppStorage, pairing_token: str, app_version: str) -> FastAPI:
     """Build the Lost Apple FastAPI app with pairing-token authentication."""
+    if not pairing_token.strip():
+        message = "pairing_token must be a non-empty value"
+        raise ValueError(message)
     app = FastAPI()
 
     @app.middleware("http")
@@ -35,7 +39,7 @@ def create_app(storage: AppStorage, pairing_token: str, app_version: str) -> Fas
                     content={"detail": INVALID_TOKEN_MESSAGE},
                 )
             token = authorization.removeprefix("Bearer ")
-            if token != pairing_token:
+            if not token or not secrets.compare_digest(token, pairing_token):
                 return JSONResponse(
                     status_code=401,
                     content={"detail": INVALID_TOKEN_MESSAGE},
