@@ -37,6 +37,10 @@ line-length = 88
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = ["D203", "D213", "COM812"]
+per-file-ignores = { "tests/app/test_storage.py" = [
+  "PLR2004",
+  "S101",
+] }
 
 [tool.mypy]
 python_version = "3.13"

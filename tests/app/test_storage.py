@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from lost_apple_app.models import DeviceSnapshot
 from lost_apple_app.storage import AppStorage
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
-async def test_storage_round_trips_device_snapshot(tmp_path) -> None:
+
+async def test_storage_round_trips_device_snapshot(tmp_path: Path) -> None:
     """Store and retrieve a normalized device snapshot."""
     storage = AppStorage(tmp_path / "lost_apple.sqlite3")
     await storage.initialize()
@@ -30,7 +34,7 @@ async def test_storage_round_trips_device_snapshot(tmp_path) -> None:
     assert await storage.list_snapshots() == [snapshot]
 
 
-async def test_storage_saves_polling_interval(tmp_path) -> None:
+async def test_storage_saves_polling_interval(tmp_path: Path) -> None:
     """Persist the user-selected polling interval."""
     storage = AppStorage(tmp_path / "lost_apple.sqlite3")
     await storage.initialize()

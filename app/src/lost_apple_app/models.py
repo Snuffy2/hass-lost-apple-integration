@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 DeviceStatus = Literal["ok", "stale", "auth_error", "rate_limited", "error"]
 
@@ -36,3 +37,8 @@ class AppHealth(BaseModel):
     account_state: Literal["not_configured", "authenticated", "reauth_required"]
     polling_interval_minutes: int
     device_count: int
+
+
+DeviceSnapshot.model_rebuild(
+    _types_namespace={"datetime": __import__("datetime").datetime}
+)
