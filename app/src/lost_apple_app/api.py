@@ -1,0 +1,63 @@
+"""FastAPI application factory for the Lost Apple app."""
+
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable  # noqa: TC003
+from typing import TYPE_CHECKING
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, Response
+
+from lost_apple_app.models import AppHealth, DeviceSnapshot
+
+if TYPE_CHECKING:
+    from lost_apple_app.storage import AppStorage
+
+
+INVALID_TOKEN_MESSAGE = "Invalid pairing token"  # noqa: S105
+
+
+def create_app(storage: AppStorage, pairing_token: str, app_version: str) -> FastAPI:
+    """Build the Lost Apple FastAPI app with pairing-token authentication."""
+    app = FastAPI()
+
+    @app.middleware("http")
+    async def _require_pairing_token(
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
+        """Reject unauthenticated requests to app API routes."""
+        if request.url.path.startswith("/api/v1/"):
+            authorization = request.headers.get("Authorization")
+            if authorization is None or not authorization.startswith("Bearer "):
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": INVALID_TOKEN_MESSAGE},
+                )
+            token = authorization.removeprefix("Bearer ")
+            if token != pairing_token:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": INVALID_TOKEN_MESSAGE},
+                )
+        return await call_next(request)
+
+    @app.get("/api/v1/health", response_model=AppHealth)
+    async def health() -> AppHealth:
+        """Return app health including polling interval and known device count."""
+        snapshots = await storage.list_snapshots()
+        polling_interval_minutes = await storage.get_polling_interval_minutes()
+        return AppHealth(
+            api_version=1,
+            app_version=app_version,
+            account_state="not_configured",
+            polling_interval_minutes=polling_interval_minutes,
+            device_count=len(snapshots),
+        )
+
+    @app.get("/api/v1/devices", response_model=list[DeviceSnapshot])
+    async def devices() -> list[DeviceSnapshot]:
+        """Return normalized device snapshots from storage."""
+        return await storage.list_snapshots()
+
+    return app
