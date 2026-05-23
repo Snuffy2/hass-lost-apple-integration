@@ -12,6 +12,36 @@ Read this file at the start of future work in this workspace and update it whene
 - Implementation plan: `docs/superpowers/plans/2026-05-23-hass-lost-apple.md`.
 - Workspace started empty and was not a git repository on 2026-05-23.
 
+## Task 10 Documentation Milestone (2026-05-23)
+
+Updated the user-facing docs to match the current implementation boundary:
+
+- `README.md` now describes install, privacy, and supported-device scope without claiming a finished Apple login/2FA flow.
+- `app/lost_apple/DOCS.md` now explains setup, the `pairing_token` path through Home Assistant App options, and the current `fetch_location()`-based source model.
+- `docs/security.md` records logging and redaction guidance for Apple credentials, session material, and pairing tokens.
+- `docs/development.md` records the repo-local venv and check commands.
+
+Verification has not been rerun yet after the doc-only edit set.
+
+## Task 10 Verification Outcome (2026-05-23)
+
+Ran the required checks from the repository root with `./.venv/bin` tooling:
+
+- `./.venv/bin/ruff check .`
+  - PASS
+- `./.venv/bin/ruff format --check .`
+  - FAIL
+  - Reported files needing reformatting: `app/src/lost_apple_app/config.py`, `app/src/lost_apple_app/findmy_client.py`, `app/src/lost_apple_app/storage.py`, `app/src/lost_apple_app/web.py`, `tests/app/test_api.py`, `tests/app/test_auth_state.py`, `tests/app/test_config.py`, `tests/app/test_web.py`, `tests/integration/test_config_flow.py`, `tests/integration/test_diagnostics.py`, `tests/integration/test_entities.py`
+- `./.venv/bin/mypy app/src custom_components tests`
+  - FAIL
+  - Duplicate-module error during package discovery:
+    - `custom_components/lost_apple/coordinator.py: error: Source file found twice under different module names: "lost_apple.coordinator" and "custom_components.lost_apple.coordinator"`
+- `./.venv/bin/pytest`
+  - PASS
+  - 43 tests passed
+
+The remaining failures are repository-level formatting/type-check path issues outside the doc-only Task 10 scope.
+
 ## Task 1 Baseline Check Output (2026-05-23)
 
 Re-ran on branch `initial-development` in `/Users/snuffy2/GitHub/hass-lost-apple` after `prek.toml` review fixes:
