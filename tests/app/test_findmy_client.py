@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from lost_apple_app.findmy_client import (
@@ -13,59 +14,52 @@ from lost_apple_app.findmy_client import (
 )
 
 
+@dataclass(frozen=True, slots=True)
 class RawLocation:
     """Fake FindMy.py location object."""
 
-    latitude = 40.7128
-    longitude = -74.006
-    horizontal_accuracy = 12.4
-    timestamp = datetime(2026, 5, 23, 20, 30, tzinfo=UTC)
+    latitude: float = 40.7128
+    longitude: float = -74.006
+    horizontal_accuracy: float | None = 12.4
+    timestamp: datetime = datetime(2026, 5, 23, 20, 30, tzinfo=UTC)
 
 
+@dataclass(frozen=True, slots=True)
 class RawDevice:
     """Fake FindMy.py official device object."""
 
-    identifier = "airtag-001"
-    name = "Keys"
-    battery_status = "medium"
-    location = RawLocation()
+    identifier: object = "airtag-001"
+    name: object = "Keys"
+    battery_status: str | None = "medium"
+    location: RawLocation = field(default_factory=RawLocation)
 
 
+@dataclass(frozen=True, slots=True)
 class LocationReport:
     """Fake FindMy.py location report."""
 
-    latitude = 40.7128
-    longitude = -74.006
-    horizontal_accuracy = 12.4
-    timestamp = datetime(2026, 5, 23, 20, 30, tzinfo=UTC)
+    latitude: float = 40.7128
+    longitude: float = -74.006
+    horizontal_accuracy: float | None = 12.4
+    timestamp: datetime = datetime(2026, 5, 23, 20, 30, tzinfo=UTC)
 
 
+@dataclass(frozen=True, slots=True)
 class FindMyKey:
     """Fake key/accessory source identifier used by account.fetch_location()."""
 
-    def __init__(self, key: str) -> None:
-        """Store the key used by the fake account."""
-        self.key = key
-
-    def __hash__(self) -> int:
-        """Hash using the underlying stable key string."""
-        return hash(self.key)
-
-    def __eq__(self, other: object) -> bool:
-        """Consider keys equal when the value matches."""
-        return isinstance(other, FindMyKey) and self.key == other.key
+    key: str
 
 
+@dataclass(frozen=True, slots=True)
 class FakeFindMyAccount:
     """Fake account implementing find_location() with deterministic responses."""
 
-    def __init__(self, mapping: dict[FindMyKey, object | None]) -> None:
-        """Store the lookup table for key-to-report mapping."""
-        self._mapping = mapping
+    mapping: dict[object, LocationReport | None]
 
-    async def fetch_location(self, key: FindMyKey) -> object | None:
+    async def fetch_location(self, key: object) -> LocationReport | None:
         """Return report for key or ``None`` when unavailable."""
-        return self._mapping.get(key)
+        return self.mapping.get(key)
 
 
 def test_normalize_findmy_device() -> None:
@@ -78,7 +72,7 @@ def test_normalize_findmy_device() -> None:
         longitude=-74.006,
         accuracy_m=12.4,
         battery_status="medium",
-        last_reported_at=RawLocation.timestamp,
+        last_reported_at=RawLocation().timestamp,
     )
     if normalized != expected:
         message = "Normalized device did not match expected output"
@@ -101,7 +95,7 @@ def test_normalize_findmy_report() -> None:
         longitude=-74.006,
         accuracy_m=12.4,
         battery_status="medium",
-        last_reported_at=LocationReport.timestamp,
+        last_reported_at=LocationReport().timestamp,
     )
     if normalized != expected:
         message = "Normalized report did not match configured source metadata"

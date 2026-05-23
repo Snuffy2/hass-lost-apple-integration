@@ -3,36 +3,62 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, cast
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
     from datetime import datetime
 
+    from findmy.accessory import RollingKeyPairSource  # type: ignore[import-untyped]
+    from findmy.keys import HasHashedPublicKey  # type: ignore[import-untyped]
+    type _FindMySourceKey = HasHashedPublicKey | RollingKeyPairSource
+
+    class _FindMyAccount(Protocol):
+        """FindMy account protocol used by this adapter."""
+
+        def fetch_location(
+            self,
+            key: _FindMySourceKey,
+        ) -> Awaitable[_FindMyLocationReport | None]:
+            ...
+else:
+    class _FindMySourceKey(Protocol):
+        """Fallback protocol for key-like values when typed keys are unavailable."""
+
+        def __hash__(self) -> int:
+            """Hash helper for dictionary-compatible keys."""
+            raise NotImplementedError
 
 class _FindMyLocationReport(Protocol):
     """Protocol for a FindMy.py location report."""
 
-    latitude: float
-    longitude: float
-    horizontal_accuracy: float | None
-    timestamp: datetime
+    @property
+    def latitude(self) -> float: ...
+
+    @property
+    def longitude(self) -> float: ...
+
+    @property
+    def horizontal_accuracy(self) -> float | None: ...
+
+    @property
+    def timestamp(self) -> datetime: ...
 
 
 class _FindMyRawDevice(Protocol):
     """Protocol for a raw FindMy.py device object."""
 
-    identifier: object
-    name: object
-    battery_status: str | None
-    location: _FindMyLocationReport
+    @property
+    def identifier(self) -> object: ...
 
+    @property
+    def name(self) -> object: ...
 
-class _FindMySourceKey(Protocol):
-    """Protocol for a FindMy.py key/accessory object."""
+    @property
+    def battery_status(self) -> str | None: ...
 
-    def __hash__(self) -> int:
-        """Enable hashing for stable map and test keys."""
-        raise NotImplementedError
+    @property
+    def location(self) -> _FindMyLocationReport: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,7 +123,7 @@ class FindMyService:
 
     def __init__(
         self,
-        account: object | None = None,
+        account: _FindMyAccount | None = None,
         sources: list[FindMySource] | None = None,
     ) -> None:
         """Initialize with optional authenticated account and configured sources."""
@@ -118,9 +144,14 @@ class FindMyService:
             )
             raise TypeError(message)
 
+        fetcher_typed = cast(
+            "Callable[[_FindMySourceKey], Awaitable[_FindMyLocationReport | None]]",
+            fetcher,
+        )
+
         devices: list[FindMyDevice] = []
         for source in self._sources:
-            location = await fetcher(source.findmy_key_or_accessory)
+            location = await fetcher_typed(source.findmy_key_or_accessory)
             if location is None:
                 # Explicitly skip missing reports for a configured source.
                 continue
