@@ -21,6 +21,7 @@ Read this file at the start of future work in this workspace and update it whene
 - Development branch: `initial-development` is local only as of 2026-05-23.
 - Remote `main` includes `af63808 Create dependabot.yml`; this was merged into `initial-development` before final validation.
 - `gh run list --limit 5` showed a visible main-branch workflow run for `Dependabot Updates` at https://github.com/Snuffy2/hass-lost-apple/actions/runs/26345846364 with conclusion `failure`.
+- Task 11 is not fully complete yet because the project `CI` workflow exists only on local `initial-development`; it has not run on GitHub. Publishing `initial-development` or merging it to `main` requires explicit user permission before any push.
 
 ## Task 10 Documentation Milestone (2026-05-23)
 
