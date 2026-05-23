@@ -14,6 +14,8 @@ Read this file at the start of future work in this workspace and update it whene
 
 ## Task 1 Baseline Check Output (2026-05-23)
 
+Re-ran on branch `initial-development` in `/Users/snuffy2/GitHub/hass-lost-apple` after `prek.toml` review fixes:
+
 Ran on branch `initial-development` in `/Users/snuffy2/GitHub/hass-lost-apple`:
 
 `python3 -m venv .venv && ./.venv/bin/python -m pip install --upgrade pip && ./.venv/bin/python -m pip install -e ".[test]"`
