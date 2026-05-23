@@ -26,6 +26,7 @@ test = [
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["app/src"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 

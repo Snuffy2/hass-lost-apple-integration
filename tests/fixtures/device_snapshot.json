@@ -1,0 +1,12 @@
+{
+  "id": "airtag-001",
+  "name": "Keys",
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "accuracy_m": 12.4,
+  "battery_status": "medium",
+  "status": "ok",
+  "last_reported_at": "2026-05-23T20:30:00Z",
+  "last_polled_at": "2026-05-23T20:35:00Z",
+  "error": null
+}
