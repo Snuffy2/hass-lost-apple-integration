@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
     from datetime import datetime
 
 
-class _FindMyDeviceLocation(Protocol):
-    """Protocol for the location object emitted by FindMy.py."""
+class _FindMyLocationReport(Protocol):
+    """Protocol for a FindMy.py location report."""
 
     latitude: float
     longitude: float
@@ -25,7 +24,15 @@ class _FindMyRawDevice(Protocol):
     identifier: object
     name: object
     battery_status: str | None
-    location: _FindMyDeviceLocation
+    location: _FindMyLocationReport
+
+
+class _FindMySourceKey(Protocol):
+    """Protocol for a FindMy.py key/accessory object."""
+
+    def __hash__(self) -> int:
+        """Enable hashing for stable map and test keys."""
+        raise NotImplementedError
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,8 +48,18 @@ class FindMyDevice:
     last_reported_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class FindMySource:
+    """Project-owned configured source for FindMy lookups."""
+
+    id: str
+    name: str
+    findmy_key_or_accessory: _FindMySourceKey
+    battery_status: str | None = None
+
+
 def normalize_findmy_device(raw_device: _FindMyRawDevice) -> FindMyDevice:
-    """Normalize a FindMy.py device into app device shape."""
+    """Normalize a raw FindMy.py device into app shape."""
     location = raw_device.location
     raw_accuracy = getattr(location, "horizontal_accuracy", None)
     raw_battery_status = getattr(raw_device, "battery_status", None)
@@ -58,26 +75,55 @@ def normalize_findmy_device(raw_device: _FindMyRawDevice) -> FindMyDevice:
     )
 
 
+def normalize_findmy_report(
+    source: FindMySource,
+    report: _FindMyLocationReport,
+) -> FindMyDevice:
+    """Normalize a FindMy.py location report using a configured source."""
+    raw_accuracy = getattr(report, "horizontal_accuracy", None)
+    return FindMyDevice(
+        id=source.id,
+        name=source.name,
+        latitude=float(report.latitude),
+        longitude=float(report.longitude),
+        accuracy_m=None if raw_accuracy is None else float(raw_accuracy),
+        battery_status=source.battery_status,
+        last_reported_at=report.timestamp,
+    )
+
+
 class FindMyService:
     """Boundary to Fetch My Apple devices."""
 
-    def __init__(self, account: object | None = None) -> None:
-        """Initialize with an optional authenticated FindMy account."""
+    def __init__(
+        self,
+        account: object | None = None,
+        sources: list[FindMySource] | None = None,
+    ) -> None:
+        """Initialize with optional authenticated account and configured sources."""
         self._account = account
+        self._sources = tuple(sources or ())
 
     async def fetch_devices(self) -> list[FindMyDevice]:
         """Fetch official Apple account-discovered Find My devices."""
-        if self._account is None:
+        if self._account is None or not self._sources:
             return []
 
-        fetcher = getattr(self._account, "fetch_devices", None)
+        fetcher = getattr(self._account, "fetch_location", None)
         if not callable(fetcher):
             message = (
-                "Authenticated FindMy account does not expose "
-                "fetch_devices() in the installed FindMy.py version."
+                "Authenticated FindMy account must implement fetch_location(); "
+                "installed FindMy.py exposes: fetch_location, "
+                "fetch_location_history, fetch_raw_reports."
             )
             raise TypeError(message)
 
-        typed_fetcher = cast("Callable[[], Awaitable[list[_FindMyRawDevice]]]", fetcher)
-        raw_devices = await typed_fetcher()
-        return [normalize_findmy_device(raw_device) for raw_device in raw_devices]
+        devices: list[FindMyDevice] = []
+        for source in self._sources:
+            location = await fetcher(source.findmy_key_or_accessory)
+            if location is None:
+                # Explicitly skip missing reports for a configured source.
+                continue
+            devices.append(normalize_findmy_report(source, location))
+
+        return devices
