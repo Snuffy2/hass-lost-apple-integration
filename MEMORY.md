@@ -12,6 +12,16 @@ Read this file at the start of future work in this workspace and update it whene
 - Implementation plan: `docs/superpowers/plans/2026-05-23-hass-lost-apple.md`.
 - Workspace started empty and was not a git repository on 2026-05-23.
 
+## Repository
+
+- GitHub repo: https://github.com/Snuffy2/hass-lost-apple
+- Visibility: public
+- Default branch: main
+- First implementation plan: `docs/superpowers/plans/2026-05-23-hass-lost-apple.md`
+- Development branch: `initial-development` is local only as of 2026-05-23.
+- Remote `main` includes `af63808 Create dependabot.yml`; this was merged into `initial-development` before final validation.
+- `gh run list --limit 5` showed a visible main-branch workflow run for `Dependabot Updates` at https://github.com/Snuffy2/hass-lost-apple/actions/runs/26345846364 with conclusion `failure`.
+
 ## Task 10 Documentation Milestone (2026-05-23)
 
 Updated the user-facing docs to match the current implementation boundary:
