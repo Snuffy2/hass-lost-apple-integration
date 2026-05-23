@@ -40,6 +40,8 @@ ignore = ["D203", "D213", "COM812"]
 per-file-ignores = { "tests/app/test_storage.py" = [
   "PLR2004",
   "S101",
+], "app/src/lost_apple_app/models.py" = [
+  "TC003",
 ] }
 
 [tool.mypy]
