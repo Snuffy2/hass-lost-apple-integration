@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,15 +35,12 @@ def _float_value(device: dict[str, Any], key: str) -> float | None:
     return None
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Lost Apple device tracker entities from a config entry."""
-    coordinator = cast("LostAppleCoordinator", hass.data[DOMAIN][entry.entry_id])
+def _build_new_trackers(
+    coordinator: LostAppleCoordinator,
+    seen_ids: set[str],
+) -> list[LostAppleDeviceTracker]:
+    """Build tracker entities for newly discovered valid devices."""
     entities: list[LostAppleDeviceTracker] = []
-    seen_ids: set[str] = set()
 
     for device in coordinator.data:
         device_id = _string_value(device, "id")
@@ -52,7 +50,27 @@ async def async_setup_entry(
         seen_ids.add(device_id)
         entities.append(LostAppleDeviceTracker(coordinator, device_id, device_name))
 
-    async_add_entities(entities)
+    return entities
+
+
+async def async_setup_entry(
+    _hass: HomeAssistant,
+    entry: ConfigEntry[LostAppleCoordinator],
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Lost Apple device tracker entities from a config entry."""
+    coordinator = entry.runtime_data
+    seen_ids: set[str] = set()
+    async_add_entities(_build_new_trackers(coordinator, seen_ids))
+
+    @callback
+    def _async_add_new_trackers() -> None:
+        """Add tracker entities for devices discovered after setup."""
+        new_entities = _build_new_trackers(coordinator, seen_ids)
+        if new_entities:
+            async_add_entities(new_entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_trackers))
 
 
 class LostAppleDeviceTracker(CoordinatorEntity[LostAppleCoordinator], TrackerEntity):

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.const import Platform
 
-from custom_components.lost_apple.const import DOMAIN
 from custom_components.lost_apple.coordinator import LostAppleCoordinator
 
 if TYPE_CHECKING:
@@ -19,23 +18,21 @@ PLATFORMS: Final[tuple[Platform, ...]] = (
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry[LostAppleCoordinator],
+) -> bool:
     """Set up Lost Apple from a config entry."""
     coordinator = LostAppleCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry[LostAppleCoordinator],
+) -> bool:
     """Unload a Lost Apple config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
-
-    domain_data = cast("dict[str, LostAppleCoordinator]", hass.data[DOMAIN])
-    domain_data.pop(entry.entry_id, None)
-    if not domain_data:
-        hass.data.pop(DOMAIN)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
