@@ -1,0 +1,17 @@
+name: Lost Apple
+slug: lost_apple
+version: "0.1.0"
+description: Home Assistant App for Apple Find My device discovery.
+url: https://github.com/snuffy2/hass-lost-apple
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: API and setup UI
+arch:
+  - aarch64
+  - amd64
+options:
+  pairing_token: ""
+schema:
+  pairing_token: "str"
+image: "ghcr.io/snuffy2/hass-lost-apple"
