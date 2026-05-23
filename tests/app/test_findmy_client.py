@@ -48,7 +48,7 @@ class LocationReport:
 class FindMyKey:
     """Fake key/accessory source identifier used by account.fetch_location()."""
 
-    key: str
+    hashed_adv_key_bytes: bytes
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +84,7 @@ def test_normalize_findmy_report() -> None:
     source = FindMySource(
         id="airtag-001",
         name="Keys",
-        findmy_key_or_accessory=FindMyKey("airtag"),
+        findmy_key_or_accessory=FindMyKey(b"airtag"),
         battery_status="medium",
     )
     normalized = normalize_findmy_report(source=source, report=LocationReport())
@@ -109,7 +109,7 @@ async def test_fetch_devices_returns_empty_when_account_is_missing() -> None:
             FindMySource(
                 id="airtag-001",
                 name="Keys",
-                findmy_key_or_accessory=FindMyKey("airtag"),
+                findmy_key_or_accessory=FindMyKey(b"airtag"),
             )
         ]
     )
@@ -130,7 +130,7 @@ async def test_fetch_devices_returns_empty_when_sources_are_missing() -> None:
 
 async def test_fetch_devices_normalizes_account_locations() -> None:
     """FindMyService normalizes reports from account.fetch_location()."""
-    key = FindMyKey("airtag")
+    key = FindMyKey(b"airtag")
     source = FindMySource(
         id="airtag-001",
         name="Keys",
@@ -147,7 +147,7 @@ async def test_fetch_devices_normalizes_account_locations() -> None:
 
 async def test_fetch_devices_skips_missing_location_reports() -> None:
     """FindMyService skips configured sources that return no location report."""
-    key = FindMyKey("airtag")
+    key = FindMyKey(b"airtag")
     source = FindMySource(
         id="airtag-001",
         name="Keys",

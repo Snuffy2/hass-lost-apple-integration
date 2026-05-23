@@ -3,31 +3,42 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
+    from collections.abc import Awaitable
     from datetime import datetime
 
-    from findmy.accessory import RollingKeyPairSource  # type: ignore[import-untyped]
-    from findmy.keys import HasHashedPublicKey  # type: ignore[import-untyped]
-    type _FindMySourceKey = HasHashedPublicKey | RollingKeyPairSource
 
-    class _FindMyAccount(Protocol):
-        """FindMy account protocol used by this adapter."""
+class _HashedPublicKey(Protocol):
+    """Protocol matching the FindMy.py public-key shape."""
 
-        def fetch_location(
-            self,
-            key: _FindMySourceKey,
-        ) -> Awaitable[_FindMyLocationReport | None]:
-            ...
-else:
-    class _FindMySourceKey(Protocol):
-        """Fallback protocol for key-like values when typed keys are unavailable."""
+    @property
+    def hashed_adv_key_bytes(self) -> bytes: ...
 
-        def __hash__(self) -> int:
-            """Hash helper for dictionary-compatible keys."""
-            raise NotImplementedError
+
+class _RollingKeySource(Protocol):
+    """Protocol matching the FindMy.py key-source shape used by fetch_location."""
+
+    def get_min_index(self, dt: datetime) -> int: ...
+
+    def get_max_index(self, dt: datetime) -> int: ...
+
+    def update_alignment(self, dt: datetime, index: int) -> None: ...
+
+    def keys_at(self, ind: int) -> set[object]: ...
+
+
+type _FindMySourceKey = _HashedPublicKey | _RollingKeySource
+
+class _FindMyAccount(Protocol):
+    """FindMy account protocol used by this adapter."""
+
+    def fetch_location(
+        self,
+        key: _FindMySourceKey,
+    ) -> Awaitable[_FindMyLocationReport | None]:
+        ...
 
 class _FindMyLocationReport(Protocol):
     """Protocol for a FindMy.py location report."""
@@ -144,14 +155,9 @@ class FindMyService:
             )
             raise TypeError(message)
 
-        fetcher_typed = cast(
-            "Callable[[_FindMySourceKey], Awaitable[_FindMyLocationReport | None]]",
-            fetcher,
-        )
-
         devices: list[FindMyDevice] = []
         for source in self._sources:
-            location = await fetcher_typed(source.findmy_key_or_accessory)
+            location = await fetcher(source.findmy_key_or_accessory)
             if location is None:
                 # Explicitly skip missing reports for a configured source.
                 continue
