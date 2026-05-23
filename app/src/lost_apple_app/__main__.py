@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final
 import uvicorn
 
 from lost_apple_app.api import create_app
+from lost_apple_app.config import resolve_pairing_token
 from lost_apple_app.storage import AppStorage
 from lost_apple_app.web import register_web_routes
 
@@ -25,19 +26,6 @@ def _resolve_database_path() -> Path:
     return Path(configured)
 
 
-def _pairing_token_error() -> str:
-    """Return the error shown when no pairing token is configured."""
-    return "Pairing token must be configured"
-
-
-def _resolve_pairing_token() -> str:
-    """Return the pairing token from configuration and reject empty values."""
-    token = os.getenv("LOST_APPLE_PAIRING_TOKEN", "")
-    if not token.strip():
-        raise ValueError(_pairing_token_error())
-    return token
-
-
 def _resolve_app_version() -> str:
     """Return the app version from env or default."""
     return os.getenv("LOST_APPLE_APP_VERSION", DEFAULT_APP_VERSION)
@@ -49,7 +37,7 @@ async def build_app() -> FastAPI:
     await storage.initialize()
     app = create_app(
         storage=storage,
-        pairing_token=_resolve_pairing_token(),
+        pairing_token=resolve_pairing_token(dict(os.environ)),
         app_version=_resolve_app_version(),
     )
     register_web_routes(app)

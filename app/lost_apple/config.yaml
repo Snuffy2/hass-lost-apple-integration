@@ -18,7 +18,7 @@ map:
   - type: addon_config
     read_only: false
 options:
-  pairing_token: ""
+  pairing_token: null
 schema:
   pairing_token: password
 image: ghcr.io/snuffy2/hass-lost-apple-{arch}
