@@ -6,6 +6,11 @@ import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from custom_components.lost_apple.api_client import LostAppleClient
 from custom_components.lost_apple.const import CONF_BASE_URL, CONF_PAIRING_TOKEN, DOMAIN
@@ -35,6 +40,8 @@ class LostAppleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.health()
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
+            except TypeError:
+                errors["base"] = "invalid_response"
             else:
                 return self.async_create_entry(title="Lost Apple", data=user_input)
 
@@ -43,7 +50,9 @@ class LostAppleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): str,
-                    vol.Required(CONF_PAIRING_TOKEN): str,
+                    vol.Required(CONF_PAIRING_TOKEN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
                 }
             ),
             errors=errors,
