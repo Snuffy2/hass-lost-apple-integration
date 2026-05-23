@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import TextSelector
 
 from custom_components.lost_apple.const import DOMAIN
@@ -12,6 +15,10 @@ from custom_components.lost_apple.const import DOMAIN
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
+
+_FIXTURE_PATH = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "device_snapshot.json"
+)
 
 
 def _assert_equal(actual: object, expected: object, message: str) -> None:
@@ -28,6 +35,15 @@ def _assert_equal(actual: object, expected: object, message: str) -> None:
         raise AssertionError(equality_error)
 
 
+def _load_device_snapshot() -> dict[str, object]:
+    """Load the shared Lost Apple device snapshot fixture."""
+    payload = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        message = "Device snapshot fixture must decode to an object"
+        raise TypeError(message)
+    return payload
+
+
 async def _create_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a Lost Apple config entry through the user flow."""
     with (
@@ -38,6 +54,10 @@ async def _create_config_entry(hass: HomeAssistant) -> ConfigEntry:
         patch(
             "custom_components.lost_apple.config_flow.LostAppleClient.health",
             AsyncMock(return_value={"api_version": 1, "app_version": "0.1.0"}),
+        ),
+        patch(
+            "custom_components.lost_apple.api_client.LostAppleClient.devices",
+            AsyncMock(return_value=[]),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -95,14 +115,30 @@ async def test_config_flow_creates_entry(hass: HomeAssistant) -> None:
     )
 
 
-async def test_config_entry_setup_succeeds_before_platforms_exist(
+async def test_config_entry_setup_registers_entity_platforms(
     hass: HomeAssistant,
 ) -> None:
-    """Config entry setup should succeed even before platform modules are added."""
+    """Config entry setup should load Lost Apple entity platforms."""
     entry = await _create_config_entry(hass)
     unload_result = await hass.config_entries.async_unload(entry.entry_id)
 
-    setup_result = await hass.config_entries.async_setup(entry.entry_id)
+    with patch(
+        "custom_components.lost_apple.api_client.LostAppleClient.devices",
+        AsyncMock(return_value=[_load_device_snapshot()]),
+    ):
+        setup_result = await hass.config_entries.async_setup(entry.entry_id)
+
+    entity_registry = er.async_get(hass)
+    tracker_entity_id = entity_registry.async_get_entity_id(
+        "device_tracker",
+        DOMAIN,
+        "lost_apple_airtag-001_tracker",
+    )
+    sensor_entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        "lost_apple_airtag-001_last_report",
+    )
 
     _assert_equal(
         actual=unload_result,
@@ -112,7 +148,17 @@ async def test_config_entry_setup_succeeds_before_platforms_exist(
     _assert_equal(
         actual=setup_result,
         expected=True,
-        message="Lost Apple config entry setup should succeed without platforms",
+        message="Lost Apple config entry setup should succeed with entity platforms",
+    )
+    _assert_equal(
+        actual=tracker_entity_id is not None,
+        expected=True,
+        message="Config entry setup should register a Lost Apple device tracker entity",
+    )
+    _assert_equal(
+        actual=sensor_entity_id is not None,
+        expected=True,
+        message="Config entry setup should register a Lost Apple sensor entity",
     )
 
 
