@@ -11,3 +11,62 @@ Read this file at the start of future work in this workspace and update it whene
 - Project: `hass-lost-apple`, a Home Assistant App plus HACS-managed custom integration for Apple Find My devices via FindMy.py local anisette.
 - Implementation plan: `docs/superpowers/plans/2026-05-23-hass-lost-apple.md`.
 - Workspace started empty and was not a git repository on 2026-05-23.
+
+## Task 1 Baseline Check Output (2026-05-23)
+
+Ran on branch `initial-development` in `/Users/snuffy2/GitHub/hass-lost-apple`:
+
+`python3 -m venv .venv && ./.venv/bin/python -m pip install --upgrade pip && ./.venv/bin/python -m pip install -e ".[test]"`
+
+```text
+Requirement already satisfied: pip in ./.venv/lib/python3.14/site-packages (26.1.1)
+Obtaining file:///Users/snuffy2/GitHub/hass-lost-apple
+  Obtaining file:///Users/snuffy2/GitHub/hass-lost-apple
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+  Successfully installed Jinja2-3.1.6 MarkupSafe-3.0.3 Pillow-12.2.0 PyJWT-2.12.1 PyNaCl-1.6.2 PyRIC-0.1.6.3 PyYAML-6.0.3 SQLAlchemy-2.0.49 acme-5.4.0 aiodns-4.0.4 aiogithubapi-26.0.0 aiohappyeyeballs-2.6.2 aiohttp-3.13.5 aiohttp-asyncmdnsresolver-0.1.1 aiohttp-fast-zlib-0.3.0 aiohttp_cors-0.8.1 aiooui-0.1.9 aioresponses-0.7.8 aiosignal-1.4.0 aiosqlite-0.22.1 aiozoneinfo-0.2.3 anisette-1.2.4 annotated-doc-0.0.4 annotated-types-0.7.0 annotatedyaml-1.0.2 anyio-4.13.0 appdirs-1.4.4 ast-serialize-0.5.0 astral-2.2 async-interrupt-1.2.2 atomicwrites-homeassistant-1.4.1 attrs-26.1.0 audioop-lts-0.2.2 awesomeversion-25.8.0 backoff-2.2.1 bcrypt-5.0.0 beautifulsoup4-4.14.3 bleak-2.1.1 bleak-retry-connector-4.6.1 bluetooth-adapters-2.1.1 bluetooth-auto-recovery-1.5.3 bluetooth-data-tools-1.29.18 boto3-1.43.14 botocore-1.43.14 btsocket-0.3.0 certifi-2026.5.20 cffi-2.0.0 charset_normalizer-3.4.7 ciso8601-2.3.3 click-8.4.1 cronsim-2.7 cryptography-47.0.0 envs-1.4 fastapi-0.136.3 findmy-0.10.0 fnv-hash-fast-2.0.2 fnvhash-0.2.1 frozenlist-1.8.0 fs-2.4.16 grpcio-1.80.0 h11-0.16.0 habluetooth-6.5.0 hass-lost-apple-0.1.0 hass-nabucasa-2.2.0 home-assistant-bluetooth-2.0.0 homeassistant-2026.5.4 httpcore-1.0.9 httptools-0.7.1 httpx-0.28.1 icmplib-3.0.4 idna-3.16 ifaddr-0.2.0 iniconfig-2.3.0 jmespath-1.1.0 josepy-2.2.0 librt-0.11.0 lru-dict-1.4.1 mashumaro-3.21 multidict-6.7.1 mypy-2.1.0 mypy_extensions-1.1.0 orjson-3.11.8 packaging-26.2 pathspec-1.1.1 pluggy-1.6.0 propcache-0.4.1 psutil-7.2.2 psutil-home-assistant-0.0.1 pyOpenSSL-26.1.0 pycares-5.0.1 pycognito-2024.5.1 pycparser-3.0 pydantic-2.13.4 pydantic-core-2.46.4 pyelftools-0.32 pygments-2.20.0 pyobjc-core-12.1 pyobjc-framework-Cocoa-12.1 pyobjc-framework-CoreBluetooth-12.1 pyobjc-framework-libdispatch-12.1 pyrfc3339-2.1.0 pytest-9.0.3 pytest-asyncio-1.3.0 python-dateutil-2.9.0.post0 python-dotenv-1.2.2 python-slugify-8.0.4 pytz-2026.2 regex-2026.5.9 requests-2.33.1 ruff-0.15.14 s3transfer-0.17.0 securetar-2026.4.1 sentence-stream-1.3.0 setuptools-82.0.1 six-1.17.0 snitun-0.45.1 soupsieve-2.8.3 srp-1.0.22 standard-aifc-3.13.0 standard-chunk-3.13.0 standard-telnetlib-3.13.0 starlette-1.1.0 text-unidecode-1.3 typing-extensions-4.15.0 typing-inspection-0.4.2 tzdata-2026.2 uart-devices-0.1.1 ulid-transform-2.2.0 unicorn-2.1.4 urllib3-2.7.0 usb-devices-0.4.5 uv-0.11.8 uvicorn-0.47.0 uvloop-0.22.1 voluptuous-0.15.2 voluptuous-openapi-0.3.0 voluptuous-serialize-2.7.0 watchfiles-1.2.0 webrtc-models-0.3.0 websockets-16.0 yarl-1.23.0 zeroconf-0.148.0
+```
+
+`./.venv/bin/ruff check .`
+
+```text
+All checks passed!
+```
+
+`./.venv/bin/mypy app/src custom_components tests`
+
+```text
+custom_components: error: Duplicate module named "__main__" (also at "app/src")
+custom_components: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#mapping-file-paths-to-modules for more info
+custom_components: note: Common resolutions include:
+custom_components: note:     a) using `--exclude` to avoid checking one of them,
+custom_components: note:     b) adding `__init__.py` somewhere,
+custom_components: note:     c) using `--explicit-package-bases` or adjusting `MYPYPATH`
+Found 1 error in 1 file (errors prevented further checking)
+```
+
+`./.venv/bin/pytest`
+
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: /Users/snuffy2/GitHub/hass-lost-apple
+configfile: pyproject.toml
+plugins: asyncio-1.3.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 0 items
+
+=============================== warnings summary ===============================
+.venv/lib/python3.14/site-packages/_pytest/config/__init__.py:1581
+  /Users/snuffy2/GitHub/hass-lost-apple/.venv/lib/python3.14/site-packages/_pytest/config/__init__.py:1581: PytestConfigWarning: No files were found in testpaths; consider removing or adjusting your testpaths configuration. Searching recursively from the current directory instead.
+    self.args, self.args_source = self._decide_args(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== 1 warning in 0.00s ==============================
+```

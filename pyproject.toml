@@ -1,0 +1,42 @@
+[project]
+name = "hass-lost-apple"
+version = "0.1.0"
+description = "Home Assistant App and custom integration for Apple Find My devices via FindMy.py"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "GPL-3.0-or-later"
+authors = [{ name = "snuffy2" }]
+dependencies = [
+  "aiosqlite>=0.20.0",
+  "fastapi>=0.115.0",
+  "findmy>=0.10.0",
+  "pydantic>=2.10.0",
+  "uvicorn[standard]>=0.32.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "aioresponses>=0.7.7",
+  "homeassistant>=2026.5.0",
+  "mypy>=1.15.0",
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.25.0",
+  "ruff>=0.9.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D203", "D213", "COM812"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+packages = ["lost_apple_app", "custom_components.lost_apple"]
