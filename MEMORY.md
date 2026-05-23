@@ -22,6 +22,7 @@ Read this file at the start of future work in this workspace and update it whene
 - Remote `main` includes `af63808 Create dependabot.yml`; this was merged into `initial-development` before final validation.
 - `gh run list --limit 5` showed a visible main-branch workflow run for `Dependabot Updates` at https://github.com/Snuffy2/hass-lost-apple/actions/runs/26345846364 with conclusion `failure`.
 - The project `CI` workflow was updated to run on branch pushes so `initial-development` can be verified on GitHub before any merge to `main`.
+- Initial `initial-development` CI run `26346759985` failed during `pip install -e ".[test]"` because setuptools auto-discovered multiple flat-layout top-level packages (`app`, `custom_components`). Fixed by constraining package discovery to `app/src` in `pyproject.toml`.
 
 ## Task 10 Documentation Milestone (2026-05-23)
 
