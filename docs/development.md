@@ -26,8 +26,11 @@ Container images for the Lost Apple App are built from:
 The publish workflow is `.github/workflows/release.yml`.
 
 - It runs:
+  - on pushes to `main`
   - on published or edited GitHub releases
-  - on `workflow_dispatch` with a tag input
-- It publishes two GHCR repositories matching Lost Apple App metadata in `app/lost_apple/config.yaml`:
-  - `ghcr.io/snuffy2/hass-lost-apple-amd64`
-  - `ghcr.io/snuffy2/hass-lost-apple-aarch64`
+  - on `workflow_dispatch` with an image tag input
+- It publishes a multi-platform image to `ghcr.io/snuffy2/hass-lost-apple`.
+- It tags images as:
+  - `edge` for pushes to `main`
+  - the release semver and `latest` for non-prerelease GitHub releases
+  - the raw `workflow_dispatch` input for manual runs

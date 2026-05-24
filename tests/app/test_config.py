@@ -118,6 +118,32 @@ def test_release_workflow_publishes_single_multi_platform_image() -> None:
     assert "platforms: linux/amd64,linux/arm64" in workflow_content
 
 
+def test_release_workflow_uses_event_specific_image_tags() -> None:
+    """Release workflow should tag images by the triggering event type."""
+    workflow_path = REPOSITORY_ROOT / ".github" / "workflows" / "release.yml"
+
+    workflow_content = workflow_path.read_text(encoding="utf-8")
+
+    assert "type=edge,branch=main,enable=${{ github.event_name == 'push' }}" in workflow_content
+    assert (
+        "type=semver,pattern={{version}},value=${{ github.event.release.tag_name }},"
+        "enable=${{ github.event_name == 'release' }}"
+    ) in workflow_content
+    assert (
+        "type=raw,value=latest,"
+        "enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}"
+    ) in workflow_content
+    assert (
+        "type=raw,value=${{ inputs.tag_name }},"
+        "enable=${{ github.event_name == 'workflow_dispatch' }}"
+    ) in workflow_content
+    assert "type=semver,pattern={{version}},value=${{ env.RELEASE_TAG }}" not in workflow_content
+    assert (
+        "type=raw,value=latest,"
+        "enable=${{ github.event_name == 'workflow_dispatch'" not in workflow_content
+    )
+
+
 def test_build_app_uses_options_json_for_authentication(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

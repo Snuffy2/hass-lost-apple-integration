@@ -1,10 +1,13 @@
 name: Release Lost Apple
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       tag_name:
-        description: Existing release and image tag to publish
+        description: Image tag to publish
         required: true
         type: string
   release:
@@ -23,12 +26,12 @@ jobs:
   release-assets:
     name: Update release assets
     runs-on: ubuntu-latest
-    if: github.event.repository.fork == false
+    if: github.event.repository.fork == false && github.event_name != 'push'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || inputs.tag_name }}
+          ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || github.ref }}
 
       - name: Debug GitHub Variables
         run: |
@@ -77,14 +80,14 @@ jobs:
     name: Build and publish Lost Apple App image
     runs-on: ubuntu-latest
     if: github.event.repository.fork == false
-    needs: release-assets
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || inputs.tag_name }}
+          ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || github.ref }}
 
       - name: Update checked-out version files for image build
+        if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'release' }}
         run: |
           sed -i "s/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"version\": \"${RELEASE_TAG}\"/" ./custom_components/lost_apple/manifest.json
           sed -i "s/^version: .*/version: ${RELEASE_TAG}/" ./app/lost_apple/config.yaml
@@ -109,8 +112,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}},value=${{ env.RELEASE_TAG }}
-            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+            type=edge,branch=main,enable=${{ github.event_name == 'push' }}
+            type=semver,pattern={{version}},value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            type=raw,value=${{ inputs.tag_name }},enable=${{ github.event_name == 'workflow_dispatch' }}
           labels: |
             org.opencontainers.image.source=https://github.com/Snuffy2/hass-lost-apple/archive/${{ github.sha }}.tar.gz
 
