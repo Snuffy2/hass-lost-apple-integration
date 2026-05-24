@@ -81,6 +81,19 @@ jobs:
           manifest_path.write_text(f"{json.dumps(manifest, indent=2)}\n")
           PY
 
+      - name: Commit released integration versions
+        if: ${{ github.event_name == 'release' && github.event.release.draft == false }}
+        run: |
+          if git diff --quiet -- custom_components/lost_apple/const.py custom_components/lost_apple/manifest.json; then
+            echo "Released integration versions already match ${RELEASE_VERSION}."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/lost_apple/const.py custom_components/lost_apple/manifest.json
+          git commit -m "Release Lost Apple Integration ${RELEASE_VERSION}"
+          git push origin "HEAD:${{ github.event.release.target_commitish }}"
+
       - name: Create Lost Apple Integration zip
         run: |
           cd "${{ github.workspace }}/custom_components/lost_apple"
