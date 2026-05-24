@@ -98,9 +98,12 @@ async def _make_app(
     monkeypatch: pytest.MonkeyPatch,
 ) -> FastAPI:
     """Create a test app and bind it to an isolated AppStorage."""
-    monkeypatch.setenv("LOST_APPLE_DB", str(tmp_path / "lost_apple.sqlite3"))
+    database_path = tmp_path / "lost_apple.sqlite3"
+    storage = AppStorage(database_path)
+    await storage.initialize()
+    monkeypatch.setenv("LOST_APPLE_DB", str(database_path))
     monkeypatch.setenv("LOST_APPLE_PAIRING_TOKEN", PAIRING_TOKEN)
-    return await build_app()
+    return build_app()
 
 
 @pytest.mark.anyio
@@ -133,6 +136,21 @@ async def test_setup_page_includes_configuration_sections(
         'fetch(setupUrl("2fa/methods")',
     ):
         assert fragment in body
+
+
+@pytest.mark.anyio
+async def test_app_root_redirects_to_setup_page(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ingress panel root should redirect without escaping the ingress prefix."""
+    app = await _make_app(tmp_path, monkeypatch)
+    client = TestClient(app, follow_redirects=False)
+
+    response = client.get("/")
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "setup"
 
 
 @pytest.mark.anyio

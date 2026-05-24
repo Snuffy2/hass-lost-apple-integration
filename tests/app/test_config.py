@@ -98,8 +98,27 @@ def test_dockerfile_starts_packaged_run_script() -> None:
     assert os.access(run_script, os.X_OK)
 
 
-@pytest.mark.anyio
-async def test_build_app_uses_options_json_for_authentication(
+def test_app_config_uses_multi_arch_image_tag() -> None:
+    """App config should point at the multi-platform GHCR image tag."""
+    config_path = REPOSITORY_ROOT / "app" / "lost_apple" / "config.yaml"
+
+    config_content = config_path.read_text(encoding="utf-8")
+
+    assert "image: ghcr.io/snuffy2/hass-lost-apple\n" in config_content
+    assert "hass-lost-apple-{arch}" not in config_content
+
+
+def test_release_workflow_publishes_single_multi_platform_image() -> None:
+    """Release workflow should publish one image name with a multi-platform manifest."""
+    workflow_path = REPOSITORY_ROOT / ".github" / "workflows" / "release.yml"
+
+    workflow_content = workflow_path.read_text(encoding="utf-8")
+
+    assert "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.arch }}" not in workflow_content
+    assert "platforms: linux/amd64,linux/arm64" in workflow_content
+
+
+def test_build_app_uses_options_json_for_authentication(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -109,20 +128,19 @@ async def test_build_app_uses_options_json_for_authentication(
     monkeypatch.setenv("LOST_APPLE_OPTIONS_PATH", str(options_path))
     monkeypatch.setenv("LOST_APPLE_DB", str(tmp_path / "lost_apple.sqlite3"))
 
-    app = await build_app()
-    client = TestClient(app)
+    app = build_app()
+    with TestClient(app) as client:
+        unauthorized = client.get("/api/v1/health")
+        _assert_status(unauthorized.status_code, HTTP_STATUS_UNAUTHORIZED)
 
-    unauthorized = client.get("/api/v1/health")
-    _assert_status(unauthorized.status_code, HTTP_STATUS_UNAUTHORIZED)
+        wrong_token = client.get(
+            "/api/v1/health",
+            headers=_make_auth_headers("invalid"),
+        )
+        _assert_status(wrong_token.status_code, HTTP_STATUS_UNAUTHORIZED)
 
-    wrong_token = client.get(
-        "/api/v1/health",
-        headers=_make_auth_headers("invalid"),
-    )
-    _assert_status(wrong_token.status_code, HTTP_STATUS_UNAUTHORIZED)
-
-    valid = client.get(
-        "/api/v1/health",
-        headers=_make_auth_headers("auth-token"),
-    )
-    _assert_status(valid.status_code, HTTP_STATUS_OK)
+        valid = client.get(
+            "/api/v1/health",
+            headers=_make_auth_headers("auth-token"),
+        )
+        _assert_status(valid.status_code, HTTP_STATUS_OK)

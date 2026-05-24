@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from findmy import (
     AsyncAppleAccount,
     AsyncSmsSecondFactor,
@@ -394,6 +394,11 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
             "{hacs_url}",
             HACS_INSTALL_URL,
         )
+
+    @app.get("/", include_in_schema=False)
+    async def root() -> RedirectResponse:
+        """Redirect the app panel root to the setup page."""
+        return RedirectResponse(url="setup")
 
     @app.get("/setup", response_class=HTMLResponse)
     async def setup() -> str:
