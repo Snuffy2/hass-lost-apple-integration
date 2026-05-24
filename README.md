@@ -11,7 +11,8 @@ The App owns local storage, polling, and the setup page. The Home Assistant inte
 3. Set a non-empty `pairing_token` in the App options. The App reads that value from Home Assistant's app options file at `/data/options.json`.
 4. Open the App setup page and use the HACS link to install the Lost Apple integration.
 5. Add the Lost Apple integration in Home Assistant and enter the App URL and pairing token.
-6. Configure the Find My sources you want the App to poll.
+6. Configure Find My sources on the setup page via `POST /setup/sources` by importing official FindMy accessory JSON exports.
+   The App currently does not auto-enumerate devices from the Apple session.
 
 ## Privacy
 

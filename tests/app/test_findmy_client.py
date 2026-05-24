@@ -11,6 +11,7 @@ from lost_apple_app.findmy_client import (
     FindMySource,
     normalize_findmy_device,
     normalize_findmy_report,
+    serialize_apple_account_state,
 )
 
 
@@ -60,6 +61,17 @@ class FakeFindMyAccount:
     async def fetch_location(self, key: object) -> LocationReport | None:
         """Return report for key or ``None`` when unavailable."""
         return self.mapping.get(key)
+
+
+class FakeSerializableAccount:
+    """Fake account state source including a password that must not persist."""
+
+    def to_json(self) -> dict[str, object]:
+        """Return account state in the same sensitive shape as FindMy.py."""
+        return {
+            "type": "account",
+            "account": {"username": "user@example.com", "password": "secret"},
+        }
 
 
 def test_normalize_findmy_device() -> None:
@@ -158,4 +170,12 @@ async def test_fetch_devices_skips_missing_location_reports() -> None:
     service = FindMyService(account=account, sources=[source])
     if await service.fetch_devices() != []:
         message = "Service should skip missing location reports instead of failing"
+        raise AssertionError(message)
+
+
+def test_serialize_apple_account_state_drops_password() -> None:
+    """Persisted Apple account state must not include the Apple password."""
+    state = serialize_apple_account_state(FakeSerializableAccount())
+    if state["account"] != {"username": "user@example.com", "password": None}:
+        message = "Serialized account state should redact the Apple password"
         raise AssertionError(message)

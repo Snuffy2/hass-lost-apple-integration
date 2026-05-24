@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Awaitable, Callable  # noqa: TC003
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 
+from lost_apple_app.auth import AuthState
 from lost_apple_app.models import AppHealth, DeviceSnapshot
 
 if TYPE_CHECKING:
@@ -51,10 +52,22 @@ def create_app(storage: AppStorage, pairing_token: str, app_version: str) -> Fas
         """Return app health including polling interval and known device count."""
         snapshots = await storage.list_snapshots()
         polling_interval_minutes = await storage.get_polling_interval_minutes()
+        account_state = await storage.get_account_state()
+        account_state_literal: Literal[
+            "not_configured",
+            "authenticated",
+            "reauth_required",
+        ]
+        if account_state == AuthState.NOT_CONFIGURED:
+            account_state_literal = "not_configured"
+        elif account_state == AuthState.AUTHENTICATED:
+            account_state_literal = "authenticated"
+        else:
+            account_state_literal = "reauth_required"
         return AppHealth(
             api_version=1,
             app_version=app_version,
-            account_state="not_configured",
+            account_state=account_state_literal,
             polling_interval_minutes=polling_interval_minutes,
             device_count=len(snapshots),
         )

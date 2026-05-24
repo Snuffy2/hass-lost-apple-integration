@@ -1,5 +1,7 @@
 """Tests for polling Find My devices."""
 
+# ruff: noqa: S101
+
 from __future__ import annotations
 
 import datetime
@@ -8,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from lost_apple_app.findmy_client import FindMyDevice, FindMyService
 from lost_apple_app.models import DeviceSnapshot
-from lost_apple_app.polling import PollingService
+from lost_apple_app.polling import PollingScheduler, PollingService
 from lost_apple_app.storage import AppStorage
 
 if TYPE_CHECKING:
@@ -57,6 +59,19 @@ class FakeFindMyService(FindMyService):
         ]
 
 
+class ClosableFindMyService(FakeFindMyService):
+    """Fake service that records close calls."""
+
+    def __init__(self) -> None:
+        """Initialize close counter."""
+        super().__init__()
+        self.close_calls = 0
+
+    async def close(self) -> None:
+        """Record scheduler cleanup."""
+        self.close_calls += 1
+
+
 async def test_poll_once_stores_snapshots(tmp_path: Path) -> None:
     """Polling once stores normalized snapshots."""
     storage = AppStorage(tmp_path / "lost_apple.sqlite3")
@@ -97,6 +112,59 @@ async def test_poll_once_stores_snapshots(tmp_path: Path) -> None:
             error=None,
         )
     ]
-    if snapshots != expected:
-        msg = "Polling service did not persist normalized snapshot"
-        raise AssertionError(msg)
+    assert snapshots == expected
+
+
+async def test_polling_scheduler_run_once_uses_factory_result(
+    tmp_path: Path,
+) -> None:
+    """Scheduler run_once should call service factory."""
+    storage = AppStorage(tmp_path / "lost_apple.sqlite3")
+    await storage.initialize()
+
+    call_count = 0
+
+    async def _service_factory() -> FindMyService:
+        nonlocal call_count
+        call_count += 1
+        return FakeFindMyService()
+
+    scheduler = PollingScheduler(storage=storage, service_factory=_service_factory)
+    await scheduler.run_once()
+    assert call_count == 1
+
+
+async def test_polling_scheduler_closes_factory_service(
+    tmp_path: Path,
+) -> None:
+    """Scheduler run_once should close account-backed services after polling."""
+    storage = AppStorage(tmp_path / "lost_apple.sqlite3")
+    await storage.initialize()
+    service = ClosableFindMyService()
+
+    async def _service_factory() -> FindMyService:
+        return service
+
+    scheduler = PollingScheduler(storage=storage, service_factory=_service_factory)
+    await scheduler.run_once()
+
+    assert service.close_calls == 1
+
+
+async def test_polling_scheduler_run_once_skips_when_factory_returns_none(
+    tmp_path: Path,
+) -> None:
+    """Scheduler run_once is a no-op when factory returns None."""
+    storage = AppStorage(tmp_path / "lost_apple.sqlite3")
+    await storage.initialize()
+    call_count = 0
+
+    async def _service_factory() -> FindMyService | None:
+        nonlocal call_count
+        call_count += 1
+        return None
+
+    scheduler = PollingScheduler(storage=storage, service_factory=_service_factory)
+    await scheduler.run_once()
+
+    assert call_count == 1

@@ -13,10 +13,12 @@ The App resolves `pairing_token` from `LOST_APPLE_PAIRING_TOKEN` first and then 
 
 1. Install the App package in Home Assistant OS.
 2. Open the App options and set a non-empty `pairing_token`.
-3. Start the App and open `GET /setup` to reach the HACS install link.
+3. Start the App and open `GET /setup` for guided Apple setup and source import.
 4. Install the companion Lost Apple integration from HACS.
 5. Add the integration in Home Assistant, then enter the App URL and the same pairing token.
-6. Configure the Find My sources that the App should poll. The current implementation expects configured sources and uses `fetch_location()`; account discovery is not implemented yet.
+6. Configure Find My sources that the App should poll.
+   The current implementation expects source payload JSON exported from official Find My tooling to be uploaded to `/setup/sources`.
+   Automatic source discovery from the Apple account session is not implemented in this scope.
 
 ## Routes
 

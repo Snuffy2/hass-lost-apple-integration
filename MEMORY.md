@@ -11,6 +11,10 @@ Read this file at the start of future work in this workspace and update it whene
 - Project: `hass-lost-apple`, a Home Assistant App plus HACS-managed custom integration for Apple Find My devices via FindMy.py local anisette.
 - Implementation plan: `docs/superpowers/plans/2026-05-23-hass-lost-apple.md`.
 - Workspace started empty and was not a git repository on 2026-05-23.
+- App runtime blockers are being addressed in:
+  - `/app/src/lost_apple_app/web.py` for guided setup (Apple login, 2FA, source import),
+  - `/app/src/lost_apple_app/__main__.py` for polling startup/shutdown wiring,
+  - `/app/src/lost_apple_app/polling.py` and `/app/src/lost_apple_app/storage.py` for polling gating and persistence.
 
 ## Repository
 

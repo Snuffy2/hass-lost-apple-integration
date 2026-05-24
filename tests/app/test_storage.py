@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
+from lost_apple_app.auth import AuthState
 from lost_apple_app.models import DeviceSnapshot
 from lost_apple_app.storage import AppStorage
 
@@ -69,3 +70,33 @@ async def test_storage_saves_polling_interval(tmp_path: Path) -> None:
     await storage.set_polling_interval_minutes(10)
 
     assert await storage.get_polling_interval_minutes() == 10
+
+
+async def test_storage_persists_account_session_and_state(tmp_path: Path) -> None:
+    """Store and restore Apple session payloads and auth state."""
+    storage = AppStorage(tmp_path / "lost_apple.sqlite3")
+    await storage.initialize()
+
+    payload = {"type": "account", "login": {"state": 1}}
+    await storage.save_apple_session(payload)
+    await storage.set_account_state(AuthState.NOT_CONFIGURED)
+
+    assert await storage.get_apple_session() == payload
+    assert await storage.get_account_state() == AuthState.NOT_CONFIGURED
+
+    await storage.clear_apple_session()
+    assert await storage.get_apple_session() is None
+
+
+async def test_storage_persists_source_payloads(tmp_path: Path) -> None:
+    """Store and restore accessory payloads used for polling sources."""
+    storage = AppStorage(tmp_path / "lost_apple.sqlite3")
+    await storage.initialize()
+
+    sources = [{"id": "airtag-001"}, {"id": "airtag-002"}]
+    await storage.save_apple_sources(sources)
+
+    assert await storage.get_apple_sources() == sources
+
+    await storage.clear_apple_sources()
+    assert await storage.get_apple_sources() is None
