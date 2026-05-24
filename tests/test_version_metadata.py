@@ -8,7 +8,6 @@ import tomllib
 
 from custom_components.lost_apple.const import VERSION
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
