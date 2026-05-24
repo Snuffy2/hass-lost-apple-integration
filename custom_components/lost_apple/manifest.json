@@ -1,0 +1,14 @@
+{
+  "domain": "lost_apple",
+  "name": "Lost Apple",
+  "codeowners": [
+    "@Snuffy2"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/snuffy2/hass-lost-apple",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/snuffy2/hass-lost-apple/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

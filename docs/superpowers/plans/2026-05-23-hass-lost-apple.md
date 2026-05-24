@@ -4,9 +4,9 @@
 
 **Goal:** Build `snuffy2/hass-lost-apple`, a Home Assistant App plus HACS-managed custom integration that tracks official Apple Find My devices through FindMy.py with local anisette and guided UI setup.
 
-**Architecture:** The Home Assistant App owns Apple authentication, FindMy.py/local anisette runtime, polling, stored snapshots, and the guided Web UI/API. The custom integration is a thin HA adapter that pairs to the App API, creates `device_tracker` and diagnostic entities, and never stores Apple credentials or talks to Apple directly.
+**Architecture:** The Lost Apple App owns Apple authentication, FindMy.py/local anisette runtime, polling, stored snapshots, and the guided Web UI/API. The Lost Apple Integration is a thin HA adapter that pairs to the Lost Apple App API, creates `device_tracker` and diagnostic entities, and never stores Apple credentials or talks to Apple directly.
 
-**Tech Stack:** Python 3.13, FastAPI/Uvicorn for the App service, FindMy.py, SQLite via `aiosqlite`, Home Assistant custom integration APIs, pytest/pytest-asyncio/aioresponses, ruff, mypy, prek, Docker, GitHub Actions, HACS metadata, HA App repository metadata.
+**Tech Stack:** Python 3.14, FastAPI/Uvicorn for the Lost Apple App service, FindMy.py, SQLite via `aiosqlite`, Home Assistant custom integration APIs, pytest/pytest-asyncio/aioresponses, ruff, mypy, prek, Docker, GitHub Actions, HACS metadata, HA App repository metadata.
 
 ---
 
@@ -72,7 +72,7 @@ name = "hass-lost-apple"
 version = "0.1.0"
 description = "Home Assistant App and custom integration for Apple Find My devices via FindMy.py"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 license = "GPL-3.0-or-later"
 authors = [{ name = "snuffy2" }]
 dependencies = [
@@ -98,7 +98,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 line-length = 88
 
 [tool.ruff.lint]
@@ -106,7 +106,7 @@ select = ["ALL"]
 ignore = ["D203", "D213", "COM812"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 strict = true
 packages = ["lost_apple_app", "custom_components.lost_apple"]
 ```
@@ -155,7 +155,7 @@ Create `README.md`:
 
 `hass-lost-apple` provides a Home Assistant App and HACS-managed custom integration for official Apple Find My devices using FindMy.py with local anisette.
 
-The App owns Apple authentication, polling, local storage, and guided setup. The Home Assistant integration pairs to the App and exposes device trackers plus diagnostics.
+The Lost Apple App owns Apple authentication, polling, local storage, and guided setup. The Lost Apple Integration pairs to the Lost Apple App and exposes device trackers plus diagnostics.
 
 ## Status
 
@@ -183,7 +183,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - run: python -m venv .venv
       - run: ./.venv/bin/python -m pip install --upgrade pip
       - run: ./.venv/bin/python -m pip install -e ".[test]"
@@ -915,8 +915,8 @@ def register_web_routes(app: FastAPI) -> None:
             <h1>Lost Apple Setup</h1>
             <ol>
               <li>Authenticate your Apple account in this App.</li>
-              <li><a href="{HACS_INSTALL_URL}">Install the Lost Apple integration with HACS</a>.</li>
-              <li>Add the Lost Apple integration in Home Assistant and paste the pairing token.</li>
+              <li><a href="{HACS_INSTALL_URL}">Install the Lost Apple Integration with HACS</a>.</li>
+              <li>Add the Lost Apple Integration in Home Assistant and paste the pairing token.</li>
             </ol>
           </body>
         </html>
@@ -1011,7 +1011,7 @@ schema:
 Create `app/lost_apple/Dockerfile`:
 
 ```dockerfile
-ARG BUILD_FROM=ghcr.io/home-assistant/aarch64-base-python:3.13-alpine3.21
+ARG BUILD_FROM=ghcr.io/home-assistant/aarch64-base-python:3.14-alpine3.21
 FROM ${BUILD_FROM}
 
 WORKDIR /app
@@ -1054,7 +1054,7 @@ Create `app/lost_apple/DOCS.md`:
 ```markdown
 # Lost Apple App Documentation
 
-Install this App, open the Web UI, authenticate with Apple, then install the companion Lost Apple integration through the HACS link shown in the setup page.
+Install the Lost Apple App, open the Web UI, authenticate with Apple, then install the companion Lost Apple Integration through the HACS link shown in the setup page.
 ```
 
 Create `app/lost_apple/translations/en.yaml`:
@@ -1063,7 +1063,7 @@ Create `app/lost_apple/translations/en.yaml`:
 configuration:
   pairing_token:
     name: Pairing token
-    description: Token used by the Lost Apple Home Assistant integration to call the App API.
+    description: Token used by the Lost Apple Integration to call the Lost Apple App API.
 ```
 
 - [ ] **Step 6: Run web and package checks**
@@ -1169,7 +1169,7 @@ Create `custom_components/lost_apple/manifest.json`:
 {
   "domain": "lost_apple",
   "name": "Lost Apple",
-  "codeowners": ["@snuffy2"],
+  "codeowners": ["@Snuffy2"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/snuffy2/hass-lost-apple",
@@ -1849,13 +1849,13 @@ Replace `README.md` with:
 
 1. In Home Assistant OS, go to **Settings > Apps** and add `https://github.com/snuffy2/hass-lost-apple` as a third-party App repository.
 2. Install the **Lost Apple** App and open its Web UI.
-3. Complete Apple login and 2FA in the App UI.
-4. Use the App UI link to install the **Lost Apple** custom integration with HACS.
-5. Add the **Lost Apple** integration in Home Assistant and paste the pairing token shown by the App.
+3. Complete Apple login and 2FA in the Lost Apple App UI.
+4. Use the Lost Apple App UI link to install the **Lost Apple Integration** with HACS.
+5. Add the **Lost Apple Integration** in Home Assistant and paste the pairing token shown by the Lost Apple App.
 
 ## Privacy
 
-Apple credentials and session data are stored only in the App's persistent data volume. The Home Assistant integration stores only the local App URL and pairing token.
+Apple credentials and session data are stored only in the Lost Apple App's persistent data volume. The Lost Apple Integration stores only the local Lost Apple App URL and pairing token.
 
 ## Supported Devices
 
@@ -1869,11 +1869,11 @@ Create `docs/security.md`:
 ```markdown
 # Security
 
-Lost Apple stores Apple credentials and session material inside the Home Assistant App data volume. The companion Home Assistant integration stores only a local App URL and pairing token.
+The Lost Apple App stores Apple credentials and session material inside the Home Assistant App data volume. The Lost Apple Integration stores only a local Lost Apple App URL and pairing token.
 
 Logs must not contain Apple IDs, passwords, two-factor codes, session cookies, pairing tokens, or raw Apple response payloads. Diagnostics redact token-like fields before export.
 
-The App uses Home Assistant Ingress for browser access where available. The local API used by the integration requires a bearer pairing token.
+The Lost Apple App uses Home Assistant Ingress for browser access where available. The local API used by the Lost Apple Integration requires a bearer pairing token.
 ```
 
 - [ ] **Step 3: Add development docs**
