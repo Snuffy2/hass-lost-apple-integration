@@ -27,6 +27,18 @@ jobs:
         with:
           ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || github.ref }}
 
+      - name: Resolve release version
+        run: |
+          if [[ ! "${RELEASE_TAG}" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Release tag must be a semantic version, optionally prefixed with v: ${RELEASE_TAG}"
+            exit 1
+          fi
+          release_version="${RELEASE_TAG}"
+          if [[ "${release_version}" =~ ^v[0-9] ]]; then
+            release_version="${release_version#v}"
+          fi
+          echo "RELEASE_VERSION=${release_version}" >> "$GITHUB_ENV"
+
       - name: Debug GitHub Variables
         run: |
           echo "github.event_name: ${{ github.event_name }}"
@@ -37,11 +49,37 @@ jobs:
           echo "github.event.release.prerelease: ${{ github.event.release.prerelease }}"
           echo "github.event.release.draft: ${{ github.event.release.draft }}"
           echo "RELEASE_TAG: ${RELEASE_TAG}"
+          echo "RELEASE_VERSION: ${RELEASE_VERSION}"
 
-      - name: Update Lost Apple Integration manifest version
+      - name: Update Lost Apple Integration versions
         if: ${{ github.event_name == 'workflow_dispatch' || github.event.release.draft == false }}
         run: |
-          sed -i "s/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"version\": \"${RELEASE_TAG}\"/" ./custom_components/lost_apple/manifest.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import re
+
+          version = os.environ["RELEASE_VERSION"]
+
+          const_path = Path("custom_components/lost_apple/const.py")
+          const_text = const_path.read_text()
+          const_text, replacement_count = re.subn(
+              r'^VERSION: Final = "[^"]*"$',
+              f'VERSION: Final = "{version}"',
+              const_text,
+              count=1,
+              flags=re.MULTILINE,
+          )
+          if replacement_count != 1:
+              raise SystemExit("Unable to update VERSION in const.py")
+          const_path.write_text(const_text)
+
+          manifest_path = Path("custom_components/lost_apple/manifest.json")
+          manifest = json.loads(manifest_path.read_text())
+          manifest["version"] = version
+          manifest_path.write_text(f"{json.dumps(manifest, indent=2)}\n")
+          PY
 
       - name: Create Lost Apple Integration zip
         run: |
