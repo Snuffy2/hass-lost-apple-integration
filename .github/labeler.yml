@@ -16,7 +16,7 @@ labels:
   - label: 'breaking-change'
     type: 'pull_request'
     title: '(?i).*breaking[ -_]change.*'
-  - label: 'github_actions'
+  - label: 'github-workflows'
     type: 'pull_request'
     title: '(?i).*(github[ -_]?actions?|workflow(s)?).*'
   - label: 'enhancement'
