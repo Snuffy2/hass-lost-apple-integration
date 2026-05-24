@@ -72,7 +72,7 @@ name = "hass-lost-apple"
 version = "0.1.0"
 description = "Home Assistant App and custom integration for Apple Find My devices via FindMy.py"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 license = "GPL-3.0-or-later"
 authors = [{ name = "snuffy2" }]
 dependencies = [
@@ -98,7 +98,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 line-length = 88
 
 [tool.ruff.lint]
@@ -106,7 +106,7 @@ select = ["ALL"]
 ignore = ["D203", "D213", "COM812"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 strict = true
 packages = ["lost_apple_app", "custom_components.lost_apple"]
 ```
@@ -183,7 +183,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - run: python -m venv .venv
       - run: ./.venv/bin/python -m pip install --upgrade pip
       - run: ./.venv/bin/python -m pip install -e ".[test]"
@@ -1011,7 +1011,7 @@ schema:
 Create `app/lost_apple/Dockerfile`:
 
 ```dockerfile
-ARG BUILD_FROM=ghcr.io/home-assistant/aarch64-base-python:3.13-alpine3.21
+ARG BUILD_FROM=ghcr.io/home-assistant/aarch64-base-python:3.14-alpine3.21
 FROM ${BUILD_FROM}
 
 WORKDIR /app

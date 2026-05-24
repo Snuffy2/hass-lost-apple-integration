@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-import json
-from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
@@ -14,28 +12,11 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.lost_apple.const import DOMAIN
 from custom_components.lost_apple.coordinator import LostAppleCoordinator
+from tests.helpers import assert_equal, load_device_snapshot
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant, State
-
-_FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "device_snapshot.json"
-
-
-def _assert_equal(actual: object, expected: object, message: str) -> None:
-    """Raise an AssertionError when two values do not match."""
-    if actual != expected:
-        equality_error = message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
-        raise AssertionError(equality_error)
-
-
-def _load_device_snapshot() -> dict[str, object]:
-    """Load the shared Lost Apple device snapshot fixture."""
-    payload = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        message = "Device snapshot fixture must decode to an object"
-        raise TypeError(message)
-    return payload
 
 
 def _build_snapshot(
@@ -44,7 +25,7 @@ def _build_snapshot(
     updates: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Build a Lost Apple device snapshot for integration tests."""
-    snapshot = _load_device_snapshot()
+    snapshot = load_device_snapshot()
     snapshot["id"] = device_id
     snapshot["name"] = name
     if updates is not None:
@@ -83,13 +64,13 @@ async def _create_config_entry(
             },
         )
 
-    _assert_equal(
+    assert_equal(
         actual=result["type"],
         expected="create_entry",
         message="Config flow should create a Lost Apple entry for entity setup tests",
     )
     entries = hass.config_entries.async_entries(DOMAIN)
-    _assert_equal(
+    assert_equal(
         actual=len(entries),
         expected=1,
         message="Entity setup tests should create exactly one Lost Apple entry",
@@ -99,11 +80,11 @@ async def _create_config_entry(
 
 async def _setup_entry_with_snapshot(hass: HomeAssistant) -> ConfigEntry:
     """Set up a Lost Apple config entry with one device snapshot."""
-    snapshot = _load_device_snapshot()
+    snapshot = load_device_snapshot()
     entry = await _create_config_entry(hass, snapshot)
     setup_result = entry.state is ConfigEntryState.LOADED
 
-    _assert_equal(
+    assert_equal(
         actual=setup_result,
         expected=True,
         message=("Lost Apple config entry should load during flow creation for entity tests"),
@@ -142,27 +123,27 @@ async def test_device_tracker_exposes_coordinates_from_snapshot(
         "lost_apple_airtag-001_tracker",
     )
 
-    _assert_equal(
+    assert_equal(
         actual=state.name,
         expected="Keys",
         message="Lost Apple device tracker should use the snapshot device name",
     )
-    _assert_equal(
+    assert_equal(
         actual=state.attributes["latitude"],
         expected=40.7128,
         message="Lost Apple device tracker should expose snapshot latitude",
     )
-    _assert_equal(
+    assert_equal(
         actual=state.attributes["longitude"],
         expected=-74.006,
         message="Lost Apple device tracker should expose snapshot longitude",
     )
-    _assert_equal(
+    assert_equal(
         actual=state.attributes["gps_accuracy"],
         expected=12.4,
         message="Lost Apple device tracker should expose snapshot GPS accuracy",
     )
-    _assert_equal(
+    assert_equal(
         actual=state.attributes["source_type"],
         expected="gps",
         message="Lost Apple device tracker should report a GPS source type",
@@ -182,17 +163,17 @@ async def test_last_report_sensor_exposes_timestamp_from_snapshot(
     )
     parsed_timestamp = dt_util.parse_datetime(state.state)
 
-    _assert_equal(
+    assert_equal(
         actual=state.name,
         expected="Keys Last Report",
         message="Lost Apple last report sensor should append a descriptive suffix",
     )
-    _assert_equal(
+    assert_equal(
         actual=state.attributes["device_class"],
         expected="timestamp",
         message="Lost Apple last report sensor should use the timestamp device class",
     )
-    _assert_equal(
+    assert_equal(
         actual=parsed_timestamp,
         expected=datetime(2026, 5, 23, 20, 30, tzinfo=UTC),
         message="Lost Apple last report sensor should parse the snapshot timestamp",
@@ -204,7 +185,7 @@ async def test_entities_update_attributes_after_coordinator_refresh(
 ) -> None:
     """Existing entities should refresh attributes from coordinator updates."""
     entry = await _setup_entry_with_snapshot(hass)
-    coordinator = entry.runtime_data
+    coordinator: LostAppleCoordinator = entry.runtime_data
     updated_snapshot = _build_snapshot(
         "airtag-001",
         "Updated Keys",
@@ -231,22 +212,22 @@ async def test_entities_update_attributes_after_coordinator_refresh(
     )
     parsed_timestamp = dt_util.parse_datetime(sensor_state.state)
 
-    _assert_equal(
+    assert_equal(
         actual=tracker_state.attributes["latitude"],
         expected=34.0522,
         message="Tracker latitude should update from the latest snapshot",
     )
-    _assert_equal(
+    assert_equal(
         actual=tracker_state.attributes["longitude"],
         expected=-118.2437,
         message="Tracker longitude should update from the latest snapshot",
     )
-    _assert_equal(
+    assert_equal(
         actual=tracker_state.attributes["gps_accuracy"],
         expected=5.25,
         message="Tracker GPS accuracy should update from the latest snapshot",
     )
-    _assert_equal(
+    assert_equal(
         actual=parsed_timestamp,
         expected=datetime(2026, 5, 23, 21, 15, tzinfo=UTC),
         message="Sensor timestamp should update from the latest snapshot",
@@ -259,12 +240,12 @@ async def test_config_entry_uses_runtime_data_and_unloads_cleanly(
     """Config entry setup should keep the coordinator in runtime_data only."""
     entry = await _setup_entry_with_snapshot(hass)
 
-    _assert_equal(
+    assert_equal(
         actual=isinstance(entry.runtime_data, LostAppleCoordinator),
         expected=True,
         message=("Lost Apple config entry should expose its coordinator via runtime_data"),
     )
-    _assert_equal(
+    assert_equal(
         actual=DOMAIN in hass.data,
         expected=False,
         message="Lost Apple integration should not store coordinators in hass.data",
@@ -272,17 +253,17 @@ async def test_config_entry_uses_runtime_data_and_unloads_cleanly(
 
     unload_result = await hass.config_entries.async_unload(entry.entry_id)
 
-    _assert_equal(
+    assert_equal(
         actual=unload_result,
         expected=True,
         message="Lost Apple config entry should unload cleanly",
     )
-    _assert_equal(
+    assert_equal(
         actual=hasattr(entry, "runtime_data"),
         expected=False,
         message="Home Assistant should clear Lost Apple runtime_data after unload",
     )
-    _assert_equal(
+    assert_equal(
         actual=DOMAIN in hass.data,
         expected=False,
         message="Lost Apple unload should leave hass.data clear for this domain",
@@ -294,7 +275,7 @@ async def test_platforms_add_entities_for_new_devices_after_refresh(
 ) -> None:
     """Coordinator refreshes should dynamically add entities for new devices."""
     entry = await _setup_entry_with_snapshot(hass)
-    coordinator = entry.runtime_data
+    coordinator: LostAppleCoordinator = entry.runtime_data
     second_snapshot = _build_snapshot(
         "airtag-002",
         "Backpack",
@@ -315,7 +296,7 @@ async def test_platforms_add_entities_for_new_devices_after_refresh(
 
     coordinator.async_set_updated_data(
         [
-            _load_device_snapshot(),
+            load_device_snapshot(),
             second_snapshot,
             malformed_snapshot,
             duplicate_snapshot,
@@ -334,18 +315,31 @@ async def test_platforms_add_entities_for_new_devices_after_refresh(
         "lost_apple_airtag-002_last_report",
     )
     entity_registry = er.async_get(hass)
+    airtag_002_entities = [
+        entry.entity_id
+        for entry in entity_registry.entities.values()
+        if entry.platform == DOMAIN and entry.unique_id.startswith("lost_apple_airtag-002_")
+    ]
 
-    _assert_equal(
+    assert_equal(
         actual=second_tracker_state.name,
         expected="Backpack",
         message="Coordinator refresh should register a tracker for a new device",
     )
-    _assert_equal(
+    assert_equal(
         actual=second_sensor_state.name,
         expected="Backpack Last Report",
         message="Coordinator refresh should register a sensor for a new device",
     )
-    _assert_equal(
+    assert_equal(
+        actual=sorted(airtag_002_entities),
+        expected=[
+            "device_tracker.backpack",
+            "sensor.backpack_last_report",
+        ],
+        message="Duplicate snapshots should create only one entity set for a device",
+    )
+    assert_equal(
         actual=entity_registry.async_get_entity_id(
             "device_tracker",
             DOMAIN,
@@ -354,7 +348,7 @@ async def test_platforms_add_entities_for_new_devices_after_refresh(
         expected=None,
         message="Malformed snapshots should not create tracker entities",
     )
-    _assert_equal(
+    assert_equal(
         actual=entity_registry.async_get_entity_id(
             "sensor",
             DOMAIN,

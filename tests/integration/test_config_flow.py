@@ -2,37 +2,25 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Protocol, cast
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import TextSelector
 
 from custom_components.lost_apple.const import DOMAIN
+from tests.helpers import assert_equal, load_device_snapshot
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-_FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "device_snapshot.json"
 
+class DataSchema(Protocol):
+    """Config-flow data schema object with a selector mapping."""
 
-def _assert_equal(actual: object, expected: object, message: str) -> None:
-    """Raise an AssertionError when two values do not match."""
-    if actual != expected:
-        equality_error = message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
-        raise AssertionError(equality_error)
-
-
-def _load_device_snapshot() -> dict[str, object]:
-    """Load the shared Lost Apple device snapshot fixture."""
-    payload = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        message = "Device snapshot fixture must decode to an object"
-        raise TypeError(message)
-    return payload
+    schema: Mapping[str, object]
 
 
 async def _create_config_entry(hass: HomeAssistant) -> ConfigEntry:
@@ -63,13 +51,13 @@ async def _create_config_entry(hass: HomeAssistant) -> ConfigEntry:
             },
         )
 
-    _assert_equal(
+    assert_equal(
         actual=result["type"],
         expected="create_entry",
         message="Config flow should create an entry after a healthy API check",
     )
     entries = hass.config_entries.async_entries(DOMAIN)
-    _assert_equal(
+    assert_equal(
         actual=len(entries),
         expected=1,
         message="Successful flow should create exactly one Lost Apple config entry",
@@ -86,17 +74,17 @@ async def test_config_flow_creates_entry(hass: HomeAssistant) -> None:
         "data": dict(entry.data),
     }
 
-    _assert_equal(
+    assert_equal(
         actual=result["type"],
         expected="create_entry",
         message="Config flow should create an entry after a healthy API check",
     )
-    _assert_equal(
+    assert_equal(
         actual=result["title"],
         expected="Lost Apple",
         message="Config flow should use the fixed integration title",
     )
-    _assert_equal(
+    assert_equal(
         actual=result["data"],
         expected={
             "base_url": "http://localhost:8099",
@@ -115,7 +103,7 @@ async def test_config_entry_setup_registers_entity_platforms(
 
     with patch(
         "custom_components.lost_apple.api_client.LostAppleClient.devices",
-        AsyncMock(return_value=[_load_device_snapshot()]),
+        AsyncMock(return_value=[load_device_snapshot()]),
     ):
         setup_result = await hass.config_entries.async_setup(entry.entry_id)
 
@@ -131,22 +119,22 @@ async def test_config_entry_setup_registers_entity_platforms(
         "lost_apple_airtag-001_last_report",
     )
 
-    _assert_equal(
+    assert_equal(
         actual=unload_result,
         expected=True,
         message="Lost Apple config entry should unload cleanly before re-setup",
     )
-    _assert_equal(
+    assert_equal(
         actual=setup_result,
         expected=True,
         message="Lost Apple config entry setup should succeed with entity platforms",
     )
-    _assert_equal(
+    assert_equal(
         actual=tracker_entity_id is not None,
         expected=True,
         message="Config entry setup should register a Lost Apple device tracker entity",
     )
-    _assert_equal(
+    assert_equal(
         actual=sensor_entity_id is not None,
         expected=True,
         message="Config entry setup should register a Lost Apple sensor entity",
@@ -179,12 +167,12 @@ async def test_config_flow_returns_invalid_response_error_for_bad_health_payload
             },
         )
 
-    _assert_equal(
+    assert_equal(
         actual=result["type"],
         expected="form",
         message="Invalid App health data should keep the user on the form step",
     )
-    _assert_equal(
+    assert_equal(
         actual=result["errors"],
         expected={"base": "invalid_response"},
         message="Invalid App health data should show an invalid response error",
@@ -200,15 +188,15 @@ async def test_config_flow_uses_password_selector_for_pairing_token(
         context={"source": "user"},
     )
 
-    data_schema = cast("Any", result["data_schema"])
-    selector = data_schema.schema["pairing_token"]
+    data_schema = cast("DataSchema", result["data_schema"])
+    selector = cast("TextSelector", data_schema.schema["pairing_token"])
 
-    _assert_equal(
+    assert_equal(
         actual=isinstance(selector, TextSelector),
         expected=True,
         message="Pairing token field should use a text selector",
     )
-    _assert_equal(
+    assert_equal(
         actual=selector.serialize(),
         expected={
             "selector": {

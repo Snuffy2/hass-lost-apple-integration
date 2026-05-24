@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from fastapi import FastAPI
 
-HTTP_STATUS_CREATED = 200
+HTTP_STATUS_OK = 200
 HTTP_STATUS_BAD_REQUEST = 400
 PAIRING_TOKEN = "test-token"
 VALID_USERNAME = "apple_user"
@@ -114,7 +114,7 @@ async def test_setup_page_includes_configuration_sections(
 
     response = client.get("/setup")
 
-    assert response.status_code == HTTP_STATUS_CREATED
+    assert response.status_code == HTTP_STATUS_OK
 
     body = response.text
     for fragment in (
@@ -180,7 +180,7 @@ async def test_login_saves_session_and_updates_health_state(
         headers=_setup_authorization_headers(),
         json={"username": VALID_USERNAME, "password": VALID_PASSWORD},
     )
-    assert response.status_code == HTTP_STATUS_CREATED
+    assert response.status_code == HTTP_STATUS_OK
 
     payload = response.json()
     assert payload["state"] == str(LoginState.REQUIRE_2FA)
@@ -194,7 +194,7 @@ async def test_login_saves_session_and_updates_health_state(
         "/api/v1/health",
         headers=_authorization_headers(PAIRING_TOKEN),
     )
-    assert health_response.status_code == HTTP_STATUS_CREATED
+    assert health_response.status_code == HTTP_STATUS_OK
     assert health_response.json()["account_state"] == "not_configured"
 
 
@@ -227,7 +227,7 @@ async def test_login_handles_immediate_authenticated_state(
         json={"username": VALID_USERNAME, "password": VALID_PASSWORD},
     )
 
-    assert response.status_code == HTTP_STATUS_CREATED
+    assert response.status_code == HTTP_STATUS_OK
     payload = response.json()
     assert payload["account_state"] == "authenticated"
     assert payload["methods"] == []
@@ -264,7 +264,7 @@ async def test_submit_two_factor_authentication_completes_login(
         headers=_setup_authorization_headers(),
         json={"username": VALID_USERNAME, "password": VALID_PASSWORD},
     )
-    assert login_response.status_code == HTTP_STATUS_CREATED
+    assert login_response.status_code == HTTP_STATUS_OK
 
     request_payload = {"method_index": 0}
     request_response = client.post(
@@ -272,7 +272,7 @@ async def test_submit_two_factor_authentication_completes_login(
         headers=_setup_authorization_headers(),
         json=request_payload,
     )
-    assert request_response.status_code == HTTP_STATUS_CREATED
+    assert request_response.status_code == HTTP_STATUS_OK
 
     submit_payload = {"method_index": 0, "code": "123456"}
     submit_response = client.post(
@@ -280,7 +280,7 @@ async def test_submit_two_factor_authentication_completes_login(
         headers=_setup_authorization_headers(),
         json=submit_payload,
     )
-    assert submit_response.status_code == HTTP_STATUS_CREATED
+    assert submit_response.status_code == HTTP_STATUS_OK
 
     submit_payload = submit_response.json()
     assert submit_payload["state"] == str(LoginState.AUTHENTICATED)
@@ -353,7 +353,7 @@ async def test_setup_sources_import_persists_payloads_with_patched_parsers(
             ]
         },
     )
-    assert response.status_code == HTTP_STATUS_CREATED
+    assert response.status_code == HTTP_STATUS_OK
 
     payload = response.json()
     assert payload["source_count"] == SOURCE_PAYLOAD_COUNT
