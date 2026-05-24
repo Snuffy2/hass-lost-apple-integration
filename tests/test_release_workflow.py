@@ -11,6 +11,6 @@ def test_release_workflow_guards_version_tag_normalization() -> None:
     """Verify the release workflow does not blindly strip leading v characters."""
     release_workflow = (PROJECT_ROOT / ".github/workflows/release.yml").read_text()
 
-    assert '${RELEASE_TAG#v}' not in release_workflow
+    assert "${RELEASE_TAG#v}" not in release_workflow
     assert r"^v?([0-9]+)\.([0-9]+)\.([0-9]+)" in release_workflow
     assert '[[ "${release_version}" =~ ^v[0-9] ]]' in release_workflow
