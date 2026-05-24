@@ -53,27 +53,6 @@ jobs:
           sed -i "s/^DEFAULT_APP_VERSION: Final = \".*\"/DEFAULT_APP_VERSION: Final = \"${RELEASE_TAG}\"/" ./app/src/lost_apple_app/__main__.py
           sed -i "s/LOST_APPLE_APP_VERSION\` (default \`.*\`)/LOST_APPLE_APP_VERSION\` (default \`${RELEASE_TAG}\`)/" ./app/lost_apple/DOCS.md
 
-      - name: Update Changelog
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false }}
-        uses: rhysd/changelog-from-release/action@v3
-        with:
-          file: CHANGELOG.md
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          commit: false
-
-      - name: Commit & Push Version Changes
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false }}
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          branch: ${{ github.event.release.target_commitish }}
-          commit_message: 'Updating to version ${{ env.RELEASE_TAG }} [skip ci]'
-
-      - name: Update Release with Version Changes Commit
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false }}
-        run: |
-          git tag -f "${RELEASE_TAG}"
-          git push -f origin "${RELEASE_TAG}"
-
       - name: Create Lost Apple Integration zip
         run: |
           cd "${{ github.workspace }}/custom_components/lost_apple"

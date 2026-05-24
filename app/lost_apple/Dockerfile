@@ -8,4 +8,4 @@ COPY . /app
 
 RUN pip install --no-cache-dir .
 
-CMD ["./run.sh"]
+CMD ["./app/lost_apple/run.sh"]

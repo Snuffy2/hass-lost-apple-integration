@@ -1169,7 +1169,7 @@ Create `custom_components/lost_apple/manifest.json`:
 {
   "domain": "lost_apple",
   "name": "Lost Apple",
-  "codeowners": ["@snuffy2"],
+  "codeowners": ["@Snuffy2"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/snuffy2/hass-lost-apple",

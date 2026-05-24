@@ -209,6 +209,12 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
   </p>
 
   <section>
+    <h2>Setup access</h2>
+    <label for="pairing-token">Pairing token</label>
+    <input id="pairing-token" type="password" autocomplete="current-password" />
+  </section>
+
+  <section>
     <h2>Apple account login</h2>
     <form id="login-form">
       <label for="username">Apple username</label>
@@ -270,16 +276,35 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
   <script>
     const authStatus = document.getElementById("auth-status");
     const methods = document.getElementById("methods");
+    const pairingToken = document.getElementById("pairing-token");
     const sourcesStatus = document.getElementById("sources-status");
+
+    function setupUrl(path) {{
+      const basePath = window.location.pathname.endsWith("/")
+        ? window.location.pathname
+        : `${{window.location.pathname}}/`;
+      return `${{basePath}}${{path}}`;
+    }}
+
+    function authHeaders() {{
+      const token = pairingToken.value;
+      if (!token) {{
+        return {{"Content-Type": "application/json"}};
+      }}
+      return {{
+        "Authorization": `Bearer ${{token}}`,
+        "Content-Type": "application/json",
+      }};
+    }}
 
     async function setStatus(target, payload) {{
       target.textContent = JSON.stringify(payload, null, 2);
     }}
 
     async function postJson(path, body) {{
-      const response = await fetch(path, {{
+      const response = await fetch(setupUrl(path), {{
         method: "POST",
-        headers: {{"Content-Type": "application/json"}},
+        headers: authHeaders(),
         body: JSON.stringify(body),
       }});
       if (!response.ok) {{
@@ -292,7 +317,9 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
     }}
 
     async function refreshMethods() {{
-      const response = await fetch("/setup/2fa/methods");
+      const response = await fetch(setupUrl("2fa/methods"), {{
+        headers: authHeaders(),
+      }});
       const payload = await response
         .json()
         .catch(() => ({{"detail": "Request failed"}}));
@@ -308,7 +335,7 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
       try {{
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
-        const payload = await postJson("/setup/login", {{username, password}});
+        const payload = await postJson("login", {{username, password}});
         await setStatus(authStatus, payload);
         await refreshMethods();
       }} catch (error) {{
@@ -323,7 +350,7 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
         const method_index = Number(
           document.getElementById("request-method-index").value
         );
-        const payload = await postJson("/setup/2fa/request", {{method_index}});
+        const payload = await postJson("2fa/request", {{method_index}});
         await setStatus(authStatus, payload);
       }} catch (error) {{
         await setStatus(authStatus, {{ error: error.message }});
@@ -338,7 +365,7 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
           document.getElementById("submit-method-index").value
         );
         const code = document.getElementById("code").value;
-        const payload = await postJson("/setup/2fa/submit", {{method_index, code}});
+        const payload = await postJson("2fa/submit", {{method_index, code}});
         await setStatus(authStatus, payload);
       }} catch (error) {{
         await setStatus(authStatus, {{ error: error.message }});
@@ -352,7 +379,7 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
         const sources = JSON.parse(
           document.getElementById("sources").value || "[]"
         );
-        const payload = await postJson("/setup/sources", {{sources}});
+        const payload = await postJson("sources", {{sources}});
         await setStatus(sourcesStatus, payload);
       }} catch (error) {{
         await setStatus(sourcesStatus, {{ error: error.message }});

@@ -2,7 +2,7 @@
   "domain": "lost_apple",
   "name": "Lost Apple",
   "codeowners": [
-    "@snuffy2"
+    "@Snuffy2"
   ],
   "config_flow": true,
   "dependencies": [],

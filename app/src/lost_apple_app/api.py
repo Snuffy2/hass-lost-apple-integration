@@ -19,6 +19,13 @@ if TYPE_CHECKING:
 INVALID_TOKEN_MESSAGE = "Invalid pairing token"  # noqa: S105
 
 
+def _requires_pairing_token(path: str) -> bool:
+    """Return whether the request path requires pairing-token authentication."""
+    if path.startswith("/api/v1/"):
+        return True
+    return path.startswith("/setup/") and path != "/setup/"
+
+
 def create_app(storage: AppStorage, pairing_token: str, app_version: str) -> FastAPI:
     """Build the Lost Apple FastAPI app with pairing-token authentication."""
     if not pairing_token.strip():
@@ -32,7 +39,7 @@ def create_app(storage: AppStorage, pairing_token: str, app_version: str) -> Fas
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         """Reject unauthenticated requests to app API routes."""
-        if request.url.path.startswith("/api/v1/"):
+        if _requires_pairing_token(request.url.path):
             authorization = request.headers.get("Authorization")
             if authorization is None or not authorization.startswith("Bearer "):
                 return JSONResponse(

@@ -3,20 +3,18 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+import os
+from pathlib import Path
 
 from fastapi.testclient import TestClient
-import pytest
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
 from lost_apple_app.__main__ import build_app
 from lost_apple_app.config import resolve_pairing_token
+import pytest
 
 AUTHORIZATION_HEADER = "Authorization"
 HTTP_STATUS_OK = 200
 HTTP_STATUS_UNAUTHORIZED = 401
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _write_options_file(path: Path, token: str) -> None:
@@ -86,6 +84,18 @@ def test_resolve_pairing_token_rejects_blank_option(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="pairing_token must be a non-empty value"):
         resolve_pairing_token(environment)
+
+
+def test_dockerfile_starts_packaged_run_script() -> None:
+    """Docker image command should target the copied app run script."""
+    dockerfile = REPOSITORY_ROOT / "app" / "lost_apple" / "Dockerfile"
+    run_script = REPOSITORY_ROOT / "app" / "lost_apple" / "run.sh"
+
+    dockerfile_content = dockerfile.read_text(encoding="utf-8")
+
+    assert 'CMD ["./app/lost_apple/run.sh"]' in dockerfile_content
+    assert run_script.exists()
+    assert os.access(run_script, os.X_OK)
 
 
 @pytest.mark.anyio

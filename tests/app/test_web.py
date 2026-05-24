@@ -88,6 +88,11 @@ def _authorization_headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
+def _setup_authorization_headers() -> dict[str, str]:
+    """Build Authorization headers for setup mutation routes."""
+    return _authorization_headers(PAIRING_TOKEN)
+
+
 async def _make_app(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -115,12 +120,42 @@ async def test_setup_page_includes_configuration_sections(
     for fragment in (
         "Lost Apple App Setup",
         "Apple account login",
+        "Setup access",
+        "Pairing token",
         "Two-factor authentication",
         "Find My source import",
         "Install through HACS",
         HACS_INSTALL_URL,
+        'postJson("login"',
+        'postJson("2fa/request"',
+        'postJson("2fa/submit"',
+        'postJson("sources"',
+        'fetch(setupUrl("2fa/methods")',
     ):
         assert fragment in body
+
+
+@pytest.mark.anyio
+async def test_setup_mutation_routes_require_pairing_token(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setup mutation routes should reject missing or invalid pairing tokens."""
+    app = await _make_app(tmp_path, monkeypatch)
+    client = TestClient(app)
+
+    response = client.post(
+        "/setup/login",
+        json={"username": VALID_USERNAME, "password": VALID_PASSWORD},
+    )
+    invalid_response = client.post(
+        "/setup/sources",
+        headers=_authorization_headers("wrong-token"),
+        json={"sources": [{"id": "airtag-001"}]},
+    )
+
+    assert response.status_code == 401
+    assert invalid_response.status_code == 401
 
 
 @pytest.mark.anyio
@@ -142,6 +177,7 @@ async def test_login_saves_session_and_updates_health_state(
 
     response = client.post(
         "/setup/login",
+        headers=_setup_authorization_headers(),
         json={"username": VALID_USERNAME, "password": VALID_PASSWORD},
     )
     assert response.status_code == HTTP_STATUS_CREATED
@@ -187,6 +223,7 @@ async def test_login_handles_immediate_authenticated_state(
 
     response = client.post(
         "/setup/login",
+        headers=_setup_authorization_headers(),
         json={"username": VALID_USERNAME, "password": VALID_PASSWORD},
     )
 
@@ -224,16 +261,25 @@ async def test_submit_two_factor_authentication_completes_login(
 
     login_response = client.post(
         "/setup/login",
+        headers=_setup_authorization_headers(),
         json={"username": VALID_USERNAME, "password": VALID_PASSWORD},
     )
     assert login_response.status_code == HTTP_STATUS_CREATED
 
     request_payload = {"method_index": 0}
-    request_response = client.post("/setup/2fa/request", json=request_payload)
+    request_response = client.post(
+        "/setup/2fa/request",
+        headers=_setup_authorization_headers(),
+        json=request_payload,
+    )
     assert request_response.status_code == HTTP_STATUS_CREATED
 
     submit_payload = {"method_index": 0, "code": "123456"}
-    submit_response = client.post("/setup/2fa/submit", json=submit_payload)
+    submit_response = client.post(
+        "/setup/2fa/submit",
+        headers=_setup_authorization_headers(),
+        json=submit_payload,
+    )
     assert submit_response.status_code == HTTP_STATUS_CREATED
 
     submit_payload = submit_response.json()
@@ -256,7 +302,11 @@ async def test_setup_sources_import_requires_valid_json_payload(
     app = await _make_app(tmp_path, monkeypatch)
     client = TestClient(app)
 
-    empty_response = client.post("/setup/sources", json={"sources": []})
+    empty_response = client.post(
+        "/setup/sources",
+        headers=_setup_authorization_headers(),
+        json={"sources": []},
+    )
     assert empty_response.status_code == HTTP_STATUS_BAD_REQUEST
 
 
@@ -295,6 +345,7 @@ async def test_setup_sources_import_persists_payloads_with_patched_parsers(
 
     response = client.post(
         "/setup/sources",
+        headers=_setup_authorization_headers(),
         json={
             "sources": [
                 {"id": "airtag-001"},
