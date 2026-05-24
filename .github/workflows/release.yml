@@ -29,7 +29,14 @@ jobs:
 
       - name: Resolve release version
         run: |
-          release_version="${RELEASE_TAG#v}"
+          if [[ ! "${RELEASE_TAG}" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Release tag must be a semantic version, optionally prefixed with v: ${RELEASE_TAG}"
+            exit 1
+          fi
+          release_version="${RELEASE_TAG}"
+          if [[ "${release_version}" =~ ^v[0-9] ]]; then
+            release_version="${release_version#v}"
+          fi
           echo "RELEASE_VERSION=${release_version}" >> "$GITHUB_ENV"
 
       - name: Debug GitHub Variables
