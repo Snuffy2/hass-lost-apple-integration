@@ -21,4 +21,4 @@ options:
   pairing_token: null
 schema:
   pairing_token: password
-image: ghcr.io/snuffy2/hass-lost-apple-{arch}
+image: ghcr.io/snuffy2/hass-lost-apple

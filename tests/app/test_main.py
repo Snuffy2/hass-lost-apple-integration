@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import lost_apple_app.__main__ as app_main
 from lost_apple_app.auth import AuthState
@@ -45,8 +46,7 @@ class FakeAccount:
         self.close_calls += 1
 
 
-@pytest.mark.anyio
-async def test_build_app_starts_and_stops_polling_scheduler(
+def test_build_app_starts_and_stops_polling_scheduler(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -61,12 +61,25 @@ async def test_build_app_starts_and_stops_polling_scheduler(
     monkeypatch.setenv("LOST_APPLE_DB", str(tmp_path / "lost_apple.sqlite3"))
     monkeypatch.setenv("LOST_APPLE_PAIRING_TOKEN", PAIRING_TOKEN)
 
-    app = await app_main.build_app()
+    app = app_main.build_app()
     with TestClient(app):
         pass
 
     assert fake_scheduler.starts == 1
     assert fake_scheduler.stops == 1
+
+
+def test_build_app_returns_sync_uvicorn_factory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """build_app() should return an ASGI app directly for uvicorn factory mode."""
+    monkeypatch.setenv("LOST_APPLE_DB", str(tmp_path / "lost_apple.sqlite3"))
+    monkeypatch.setenv("LOST_APPLE_PAIRING_TOKEN", PAIRING_TOKEN)
+
+    app = app_main.build_app()
+
+    assert isinstance(app, FastAPI)
 
 
 async def test_polling_service_builder_closes_account_on_source_error(

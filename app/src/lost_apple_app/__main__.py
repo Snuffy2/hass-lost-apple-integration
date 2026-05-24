@@ -70,10 +70,9 @@ async def _build_service_for_polling(storage: AppStorage) -> FindMyService | Non
     return FindMyService(account=account, sources=sources)
 
 
-async def build_app() -> FastAPI:
+def build_app() -> FastAPI:
     """Create and return the ASGI app for FastAPI startup."""
     storage = AppStorage(_resolve_database_path())
-    await storage.initialize()
     app = create_app(
         storage=storage,
         pairing_token=resolve_pairing_token(dict(os.environ)),
@@ -88,6 +87,7 @@ async def build_app() -> FastAPI:
     @app.on_event("startup")
     async def _start_polling() -> None:
         """Start background polling when auth and sources are configured."""
+        await storage.initialize()
         await scheduler.start()
 
     @app.on_event("shutdown")
