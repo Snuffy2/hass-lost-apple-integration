@@ -20,23 +20,26 @@ jobs:
           ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || github.ref }}
 
       - name: Update Version Metadata
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false }}
+        if: ${{ github.event_name == 'release' }}
         env:
           RELEASE_VERSION: ${{ github.event.release.tag_name }}
-        run: python3 scripts/update_release_version.py "${RELEASE_VERSION}"
+        run: python3 .github/scripts/update_release_version.py "${RELEASE_VERSION}"
 
       - name: Commit & Push Version Changes
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false  }}
+        if: ${{ github.event_name == 'release' && github.event.release.prerelease == false  }}
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           branch: ${{ github.event.release.target_commitish }}
           commit_message: 'Updating to version ${{ github.event.release.tag_name }} [skip ci]'
 
       - name: Update Release with Version Changes Commit
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false  }}
+        if: ${{ github.event_name == 'release' && github.event.release.prerelease == false  }}
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          git tag -f ${{ github.event.release.tag_name }}
-          git push -f origin ${{ github.event.release.tag_name }}
+          git check-ref-format "refs/tags/${RELEASE_TAG}"
+          git tag -f -- "${RELEASE_TAG}"
+          git push -f origin -- "${RELEASE_TAG}"
 
       - name: Create Zip
         run: |
@@ -44,7 +47,7 @@ jobs:
           zip "lost_apple.zip" -r ./
 
       - name: Upload Zip to Release
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false }}
+        if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v3
         with:
           files: ./custom_components/lost_apple/lost_apple.zip

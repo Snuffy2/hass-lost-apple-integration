@@ -2,12 +2,34 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+import importlib.util
 import json
 from pathlib import Path
-
-from scripts.update_release_version import update_version_files
+from types import ModuleType
+from typing import cast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_update_version_files() -> Callable[[Path, str], None]:
+    """Load the release version updater from the GitHub scripts folder."""
+    script_path = PROJECT_ROOT / ".github" / "scripts" / "update_release_version.py"
+    spec = importlib.util.spec_from_file_location("update_release_version", script_path)
+    if spec is None or spec.loader is None:
+        msg = f"Unable to load release updater script from {script_path}"
+        raise RuntimeError(msg)
+    module = importlib.util.module_from_spec(spec)
+    cast("ModuleType", module)
+    spec.loader.exec_module(module)
+    update_version_files = module.update_version_files
+    if not callable(update_version_files):
+        msg = "Release updater script does not expose update_version_files"
+        raise TypeError(msg)
+    return cast("Callable[[Path, str], None]", update_version_files)
+
+
+UPDATE_VERSION_FILES = load_update_version_files()
 
 
 def test_release_workflow_updates_version_metadata_without_sed() -> None:
@@ -15,7 +37,7 @@ def test_release_workflow_updates_version_metadata_without_sed() -> None:
     release_workflow = (PROJECT_ROOT / ".github/workflows/release.yml").read_text()
 
     assert "sed -i" not in release_workflow
-    assert "scripts/update_release_version.py" in release_workflow
+    assert ".github/scripts/update_release_version.py" in release_workflow
     assert "RELEASE_VERSION" in release_workflow
 
 
@@ -54,7 +76,7 @@ def test_update_release_version_updates_manifest_and_typed_constant(
         + "\n",
     )
 
-    update_version_files(tmp_path, "1.2.3")
+    UPDATE_VERSION_FILES(tmp_path, "1.2.3")
 
     assert 'VERSION: Final = "1.2.3"' in const_path.read_text()
     assert json.loads(manifest_path.read_text())["version"] == "1.2.3"
