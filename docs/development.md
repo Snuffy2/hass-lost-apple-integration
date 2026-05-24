@@ -19,16 +19,15 @@ Run the project checks from the repository root with the repo-local venv:
 
 ## Release workflow notes
 
-Container images for the Home Assistant App are built from:
+Container images for the Lost Apple App are built from:
 - `app/lost_apple/Dockerfile`
 - repository root as Docker build context
 
-The publish workflow is `.github/workflows/release-app-images.yml`.
+The publish workflow is `.github/workflows/release.yml`.
 
 - It runs:
-  - on pushes to branch `initial-development` (build validation only, no publish)
-  - on pushes of `v*` tags (build and publish)
-  - on `workflow_dispatch` (manual build and publish)
-- It publishes two GHCR repositories matching App metadata in `app/lost_apple/config.yaml`:
+  - on published or edited GitHub releases
+  - on `workflow_dispatch` with a tag input
+- It publishes two GHCR repositories matching Lost Apple App metadata in `app/lost_apple/config.yaml`:
   - `ghcr.io/snuffy2/hass-lost-apple-amd64`
   - `ghcr.io/snuffy2/hass-lost-apple-aarch64`

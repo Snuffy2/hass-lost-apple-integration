@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
@@ -19,17 +19,13 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant, State
 
-_FIXTURE_PATH = (
-    Path(__file__).resolve().parents[1] / "fixtures" / "device_snapshot.json"
-)
+_FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "device_snapshot.json"
 
 
 def _assert_equal(actual: object, expected: object, message: str) -> None:
     """Raise an AssertionError when two values do not match."""
     if actual != expected:
-        equality_error = (
-            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
-        )
+        equality_error = message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         raise AssertionError(equality_error)
 
 
@@ -110,9 +106,7 @@ async def _setup_entry_with_snapshot(hass: HomeAssistant) -> ConfigEntry:
     _assert_equal(
         actual=setup_result,
         expected=True,
-        message=(
-            "Lost Apple config entry should load during flow creation for entity tests"
-        ),
+        message=("Lost Apple config entry should load during flow creation for entity tests"),
     )
     return entry
 
@@ -126,9 +120,7 @@ def _get_state_by_unique_id(
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(entity_domain, DOMAIN, unique_id)
     if entity_id is None:
-        message = (
-            f"Entity registry is missing {entity_domain} with unique ID {unique_id!r}"
-        )
+        message = f"Entity registry is missing {entity_domain} with unique ID {unique_id!r}"
         raise AssertionError(message)
 
     state = hass.states.get(entity_id)
@@ -207,6 +199,60 @@ async def test_last_report_sensor_exposes_timestamp_from_snapshot(
     )
 
 
+async def test_entities_update_attributes_after_coordinator_refresh(
+    hass: HomeAssistant,
+) -> None:
+    """Existing entities should refresh attributes from coordinator updates."""
+    entry = await _setup_entry_with_snapshot(hass)
+    coordinator = entry.runtime_data
+    updated_snapshot = _build_snapshot(
+        "airtag-001",
+        "Updated Keys",
+        {
+            "latitude": 34.0522,
+            "longitude": -118.2437,
+            "accuracy_m": 5.25,
+            "last_reported_at": "2026-05-23T21:15:00Z",
+        },
+    )
+
+    coordinator.async_set_updated_data([updated_snapshot])
+    await hass.async_block_till_done()
+
+    tracker_state = _get_state_by_unique_id(
+        hass,
+        "device_tracker",
+        "lost_apple_airtag-001_tracker",
+    )
+    sensor_state = _get_state_by_unique_id(
+        hass,
+        "sensor",
+        "lost_apple_airtag-001_last_report",
+    )
+    parsed_timestamp = dt_util.parse_datetime(sensor_state.state)
+
+    _assert_equal(
+        actual=tracker_state.attributes["latitude"],
+        expected=34.0522,
+        message="Tracker latitude should update from the latest snapshot",
+    )
+    _assert_equal(
+        actual=tracker_state.attributes["longitude"],
+        expected=-118.2437,
+        message="Tracker longitude should update from the latest snapshot",
+    )
+    _assert_equal(
+        actual=tracker_state.attributes["gps_accuracy"],
+        expected=5.25,
+        message="Tracker GPS accuracy should update from the latest snapshot",
+    )
+    _assert_equal(
+        actual=parsed_timestamp,
+        expected=datetime(2026, 5, 23, 21, 15, tzinfo=UTC),
+        message="Sensor timestamp should update from the latest snapshot",
+    )
+
+
 async def test_config_entry_uses_runtime_data_and_unloads_cleanly(
     hass: HomeAssistant,
 ) -> None:
@@ -216,9 +262,7 @@ async def test_config_entry_uses_runtime_data_and_unloads_cleanly(
     _assert_equal(
         actual=isinstance(entry.runtime_data, LostAppleCoordinator),
         expected=True,
-        message=(
-            "Lost Apple config entry should expose its coordinator via runtime_data"
-        ),
+        message=("Lost Apple config entry should expose its coordinator via runtime_data"),
     )
     _assert_equal(
         actual=DOMAIN in hass.data,

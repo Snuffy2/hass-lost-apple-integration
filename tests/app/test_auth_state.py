@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import pytest
 from lost_apple_app.auth import AuthState, classify_auth_error
+import pytest
 
 
 def _assert_state(actual: object, expected: object, message: str) -> None:
     """Raise an assertion error when auth classification differs."""
     if actual is not expected:
-        error_message = (
-            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
-        )
+        error_message = message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         raise AssertionError(error_message)
 
 

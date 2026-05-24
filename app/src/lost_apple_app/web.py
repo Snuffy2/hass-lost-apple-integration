@@ -15,11 +15,7 @@ from findmy import (
     LocalAnisetteProvider,
     LoginState,
 )
-from findmy.errors import (
-    InvalidCredentialsError,
-    InvalidStateError,
-    UnauthorizedError,
-)
+from findmy.errors import InvalidCredentialsError, InvalidStateError, UnauthorizedError
 from pydantic import BaseModel, Field
 
 from lost_apple_app.auth import AuthState
@@ -67,7 +63,7 @@ class SourceImportRequest(BaseModel):
     sources: list[object]
 
 
-def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C901, PLR0915
+def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C901
     """Register setup routes for Apple login, 2FA, and source import."""
     pending_account: AsyncAppleAccount | None = None
 

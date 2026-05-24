@@ -8,8 +8,8 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-import uvicorn
 from findmy.errors import InvalidStateError
+import uvicorn
 
 from lost_apple_app.api import create_app
 from lost_apple_app.auth import AuthState

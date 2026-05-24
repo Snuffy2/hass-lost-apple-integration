@@ -271,9 +271,7 @@ def _load_accessory(payload: object) -> FindMyAccessory:
     if isinstance(payload, Mapping):
         return FindMyAccessory.from_json(payload)
     if isinstance(payload, (str, bytes, bytearray)):
-        source_payload = (
-            payload.decode() if isinstance(payload, (bytes, bytearray)) else payload
-        )
+        source_payload = payload.decode() if isinstance(payload, (bytes, bytearray)) else payload
         return FindMyAccessory.from_json(source_payload)
 
     error = "Invalid accessory payload type"

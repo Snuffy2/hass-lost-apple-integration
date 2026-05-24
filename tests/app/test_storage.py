@@ -5,10 +5,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-import pytest
 from lost_apple_app.auth import AuthState
 from lost_apple_app.models import DeviceSnapshot
 from lost_apple_app.storage import AppStorage
+import pytest
 
 if TYPE_CHECKING:
     from pathlib import Path

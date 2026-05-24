@@ -3,14 +3,10 @@
 from __future__ import annotations
 
 import aiohttp
-import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
+import voluptuous as vol
 
 from custom_components.lost_apple.api_client import LostAppleClient
 from custom_components.lost_apple.const import CONF_BASE_URL, CONF_PAIRING_TOKEN, DOMAIN

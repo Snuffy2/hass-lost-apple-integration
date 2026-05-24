@@ -1,0 +1,158 @@
+name: Release Lost Apple
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Existing release and image tag to publish
+        required: true
+        type: string
+  release:
+    types: [published, edited]
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: snuffy2/hass-lost-apple
+  RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag_name }}
+
+jobs:
+  release-assets:
+    name: Update release assets
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || inputs.tag_name }}
+
+      - name: Debug GitHub Variables
+        run: |
+          echo "github.event_name: ${{ github.event_name }}"
+          echo "github.ref_name: ${{ github.ref_name }}"
+          echo "github.event.release.tag_name: ${{ github.event.release.tag_name }}"
+          echo "github.event.repository.default_branch: ${{ github.event.repository.default_branch }}"
+          echo "github.event.release.target_commitish: ${{ github.event.release.target_commitish }}"
+          echo "github.event.release.prerelease: ${{ github.event.release.prerelease }}"
+          echo "github.event.release.draft: ${{ github.event.release.draft }}"
+          echo "RELEASE_TAG: ${RELEASE_TAG}"
+
+      - name: Update Lost Apple Integration manifest version
+        if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && github.event.release.draft == false) }}
+        run: |
+          sed -i "s/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"version\": \"${RELEASE_TAG}\"/" ./custom_components/lost_apple/manifest.json
+
+      - name: Update Lost Apple App version
+        if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && github.event.release.draft == false) }}
+        run: |
+          sed -i "s/^version: .*/version: ${RELEASE_TAG}/" ./app/lost_apple/config.yaml
+          sed -i "s/^DEFAULT_APP_VERSION: Final = \".*\"/DEFAULT_APP_VERSION: Final = \"${RELEASE_TAG}\"/" ./app/src/lost_apple_app/__main__.py
+          sed -i "s/LOST_APPLE_APP_VERSION\` (default \`.*\`)/LOST_APPLE_APP_VERSION\` (default \`${RELEASE_TAG}\`)/" ./app/lost_apple/DOCS.md
+
+      - name: Update Changelog
+        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false }}
+        uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit: false
+
+      - name: Commit & Push Version Changes
+        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false }}
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          branch: ${{ github.event.release.target_commitish }}
+          commit_message: 'Updating to version ${{ env.RELEASE_TAG }} [skip ci]'
+
+      - name: Update Release with Version Changes Commit
+        if: ${{ github.event_name == 'release' && github.event.release.draft == false && github.event.release.prerelease == false }}
+        run: |
+          git tag -f "${RELEASE_TAG}"
+          git push -f origin "${RELEASE_TAG}"
+
+      - name: Create Lost Apple Integration zip
+        run: |
+          cd "${{ github.workspace }}/custom_components/lost_apple"
+          zip lost_apple.zip -r ./
+
+      - name: Upload Lost Apple Integration zip to Release
+        if: ${{ github.event_name == 'release' && github.event.release.draft == false }}
+        uses: softprops/action-gh-release@v3
+        with:
+          files: ./custom_components/lost_apple/lost_apple.zip
+          tag_name: ${{ env.RELEASE_TAG }}
+
+      - name: Add Lost Apple Integration zip to Action
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: lost_apple
+          path: ./custom_components/lost_apple/lost_apple.zip
+          if-no-files-found: error
+
+  publish-images:
+    name: Build and publish Lost Apple App image
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
+    needs: release-assets
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+          - arch: aarch64
+            platform: linux/arm64
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || inputs.tag_name }}
+
+      - name: Update checked-out version files for image build
+        run: |
+          sed -i "s/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"version\": \"${RELEASE_TAG}\"/" ./custom_components/lost_apple/manifest.json
+          sed -i "s/^version: .*/version: ${RELEASE_TAG}/" ./app/lost_apple/config.yaml
+          sed -i "s/^DEFAULT_APP_VERSION: Final = \".*\"/DEFAULT_APP_VERSION: Final = \"${RELEASE_TAG}\"/" ./app/src/lost_apple_app/__main__.py
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.arch }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.RELEASE_TAG }}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/Snuffy2/hass-lost-apple/archive/${{ github.sha }}.tar.gz
+
+      - name: Build and publish Lost Apple App image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: app/lost_apple/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            LOST_APPLE_VERSION=${{ env.RELEASE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

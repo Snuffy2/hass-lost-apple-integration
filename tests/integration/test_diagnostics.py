@@ -18,9 +18,7 @@ _REDACTION_KEYS = (
 def _assert_equal(actual: object, expected: object, message: str) -> None:
     """Raise an AssertionError when values do not match."""
     if actual != expected:
-        error_message = (
-            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
-        )
+        error_message = message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         raise AssertionError(error_message)
 
 

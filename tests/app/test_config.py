@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -33,9 +33,7 @@ def _make_auth_headers(token: str) -> dict[str, str]:
 def _assert_equal(actual: object, expected: object, message: str) -> None:
     """Raise assertion failures with a message format consistent with project style."""
     if actual != expected:
-        equality_error = (
-            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
-        )
+        equality_error = message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         raise AssertionError(equality_error)
 
 
@@ -43,10 +41,7 @@ def _assert_status(response_status: int, expected_status: int) -> None:
     """Validate response status with explicit assertion style."""
     if response_status != expected_status:
         status_error = (
-            "Unexpected status code: "
-            + str(response_status)
-            + ", expected "
-            + str(expected_status)
+            "Unexpected status code: " + str(response_status) + ", expected " + str(expected_status)
         )
         raise AssertionError(status_error)
 

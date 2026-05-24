@@ -1,21 +1,19 @@
 """Tests for app startup behavior in __main__.py."""
 
-# ruff: noqa: S101, SLF001
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
 from fastapi.testclient import TestClient
-from lost_apple_app import __main__ as app_main
+import lost_apple_app.__main__ as app_main
 from lost_apple_app.auth import AuthState
 from lost_apple_app.storage import AppStorage
+import pytest
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-PAIRING_TOKEN = "test-token"  # noqa: S105
+PAIRING_TOKEN = "test-token"
 
 
 class FakeScheduler:

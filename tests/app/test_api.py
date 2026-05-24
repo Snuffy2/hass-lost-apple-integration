@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-import pytest
 from fastapi.testclient import TestClient
 from lost_apple_app.api import create_app
 from lost_apple_app.models import DeviceSnapshot
 from lost_apple_app.storage import POLLING_INTERVAL_DEFAULT_MINUTES, AppStorage
+import pytest
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -22,9 +22,9 @@ APP_VERSION = "1.0.0"
 API_VERSION = 1
 HTTP_STATUS_OK = 200
 HTTP_STATUS_UNAUTHORIZED = 401
-INVALID_TOKEN_ERROR = "Invalid pairing token"  # noqa: S105
+INVALID_TOKEN_ERROR = "Invalid pairing token"
 EMPTY_STRING = ""
-WHITESPACE_TOKEN = "   "  # noqa: S105
+WHITESPACE_TOKEN = "   "
 DEVICE_ID = "airtag-001"
 DEVICE_NAME = "Keys"
 LATITUDE = 40.7128

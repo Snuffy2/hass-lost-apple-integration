@@ -25,12 +25,9 @@ CREATE_SETTINGS_TABLE_SQL = (
 UPSERT_SNAPSHOT_SQL = "INSERT OR REPLACE INTO snapshots (id, payload) VALUES (?, ?)"
 UPSERT_SETTINGS_SQL = "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)"
 SET_POLLING_INTERVAL_SQL = (
-    "INSERT OR REPLACE INTO settings "
-    "(key, value) VALUES ('polling_interval_minutes', ?)"
+    "INSERT OR REPLACE INTO settings (key, value) VALUES ('polling_interval_minutes', ?)"
 )
-SELECT_POLLING_INTERVAL_SQL = (
-    "SELECT value FROM settings WHERE key = 'polling_interval_minutes'"
-)
+SELECT_POLLING_INTERVAL_SQL = "SELECT value FROM settings WHERE key = 'polling_interval_minutes'"
 SELECT_SETTINGS_SQL = "SELECT value FROM settings WHERE key = ?"
 POLLING_INTERVAL_MIN_MINUTES = 5
 POLLING_INTERVAL_MAX_MINUTES = 60

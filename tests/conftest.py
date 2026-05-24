@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
 from homeassistant import bootstrap, loader
 from homeassistant.core import HomeAssistant
+import pytest
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -26,4 +26,7 @@ async def hass(tmp_path: Path) -> AsyncIterator[HomeAssistant]:
     try:
         yield hass
     finally:
+        for entry in list(hass.config_entries.async_entries()):
+            await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
         await hass.async_stop()

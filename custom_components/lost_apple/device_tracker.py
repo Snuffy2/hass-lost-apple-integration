@@ -2,36 +2,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from custom_components.lost_apple.const import DOMAIN
 from custom_components.lost_apple.coordinator import LostAppleCoordinator
+from custom_components.lost_apple.entity import LostAppleEntity, float_value, string_value
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-
-def _string_value(device: dict[str, Any], key: str) -> str | None:
-    """Return a string value from a device snapshot when present."""
-    value = device.get(key)
-    if isinstance(value, str) and value:
-        return value
-    return None
-
-
-def _float_value(device: dict[str, Any], key: str) -> float | None:
-    """Return a numeric value from a device snapshot as a float."""
-    value = device.get(key)
-    if isinstance(value, int | float):
-        return float(value)
-    return None
 
 
 def _build_new_trackers(
@@ -42,8 +24,8 @@ def _build_new_trackers(
     entities: list[LostAppleDeviceTracker] = []
 
     for device in coordinator.data:
-        device_id = _string_value(device, "id")
-        device_name = _string_value(device, "name")
+        device_id = string_value(device, "id")
+        device_name = string_value(device, "name")
         if device_id is None or device_name is None or device_id in seen_ids:
             continue
         seen_ids.add(device_id)
@@ -72,7 +54,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_trackers))
 
 
-class LostAppleDeviceTracker(CoordinatorEntity[LostAppleCoordinator], TrackerEntity):
+class LostAppleDeviceTracker(LostAppleEntity, TrackerEntity):
     """Represent one tracked Apple Find My device."""
 
     _attr_source_type: str = "gps"  # type: ignore[assignment]
@@ -84,52 +66,12 @@ class LostAppleDeviceTracker(CoordinatorEntity[LostAppleCoordinator], TrackerEnt
         device_name: str,
     ) -> None:
         """Initialize the Lost Apple tracker entity."""
-        super().__init__(coordinator, context=device_id)
-        self._device_id = device_id
-        self._fallback_name = device_name
-        self._attr_unique_id = f"lost_apple_{device_id}_tracker"
+        super().__init__(coordinator, device_id, device_name, "tracker")
         self._attr_name = device_name
-        self._attr_device_info: DeviceInfo = DeviceInfo(  # type: ignore[assignment]
-            identifiers={(DOMAIN, device_id)},
-            name=device_name,
-        )
+        self._update_from_device()
 
-    @property
-    def latitude(self) -> float | None:
-        """Return the latest device latitude."""
-        device = self._current_device
-        if device is None:
-            return None
-        return _float_value(device, "latitude")
-
-    @property
-    def location_accuracy(self) -> float | None:  # type: ignore[override]
-        """Return the latest device location accuracy in meters."""
-        device = self._current_device
-        if device is None:
-            return None
-        return _float_value(device, "accuracy_m")
-
-    @property
-    def longitude(self) -> float | None:
-        """Return the latest device longitude."""
-        device = self._current_device
-        if device is None:
-            return None
-        return _float_value(device, "longitude")
-
-    @property
-    def name(self) -> str:
-        """Return the current device name."""
-        device = self._current_device
-        if device is None:
-            return self._fallback_name
-        return _string_value(device, "name") or self._fallback_name
-
-    @property
-    def _current_device(self) -> dict[str, Any] | None:
-        """Return the current snapshot for this device."""
-        for device in self.coordinator.data:
-            if _string_value(device, "id") == self._device_id:
-                return device
-        return None
+    def _update_from_device(self) -> None:
+        """Update tracker attributes from the current device snapshot."""
+        self._attr_latitude = float_value(self._device, "latitude")
+        self._attr_longitude = float_value(self._device, "longitude")
+        self._attr_location_accuracy = float_value(self._device, "accuracy_m")  # type: ignore[assignment]

@@ -2,19 +2,17 @@
 
 # mypy: disable_error_code=import-untyped
 
-# ruff: noqa: S101
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
 from fastapi.testclient import TestClient
 from findmy.reports import LoginState
 from lost_apple_app.__main__ import build_app
 from lost_apple_app.auth import AuthState
 from lost_apple_app.storage import AppStorage
 from lost_apple_app.web import HACS_INSTALL_URL
+import pytest
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -23,9 +21,9 @@ if TYPE_CHECKING:
 
 HTTP_STATUS_CREATED = 200
 HTTP_STATUS_BAD_REQUEST = 400
-PAIRING_TOKEN = "test-token"  # noqa: S105
+PAIRING_TOKEN = "test-token"
 VALID_USERNAME = "apple_user"
-VALID_PASSWORD = "apple_pass"  # noqa: S105
+VALID_PASSWORD = "apple_pass"
 SOURCE_PAYLOAD_COUNT = 2
 
 

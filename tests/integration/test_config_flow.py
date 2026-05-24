@@ -16,17 +16,13 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-_FIXTURE_PATH = (
-    Path(__file__).resolve().parents[1] / "fixtures" / "device_snapshot.json"
-)
+_FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "device_snapshot.json"
 
 
 def _assert_equal(actual: object, expected: object, message: str) -> None:
     """Raise an AssertionError when two values do not match."""
     if actual != expected:
-        equality_error = (
-            message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
-        )
+        equality_error = message + " (got=" + repr(actual) + ", expected=" + repr(expected) + ")"
         raise AssertionError(equality_error)
 
 

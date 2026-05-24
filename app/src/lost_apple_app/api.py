@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import secrets
-from collections.abc import Awaitable, Callable  # noqa: TC003
 from typing import TYPE_CHECKING, Literal
 
 from fastapi import FastAPI, Request
