@@ -26,6 +26,6 @@ The publish workflow is `.github/workflows/release.yml`.
 - It runs:
   - on published or edited GitHub releases
   - on `workflow_dispatch` with an integration version input
-- It updates `custom_components/lost_apple/const.py` and `custom_components/lost_apple/manifest.json` with the release version in the checked-out workspace.
+- It updates `custom_components/lost_apple/const.py` and `custom_components/lost_apple/manifest.json` with the release version, then commits those metadata updates back to the release target branch for GitHub release events.
 - It packages `custom_components/lost_apple` as `lost_apple.zip`.
 - It uploads the zip to the GitHub release, or as a workflow artifact for manual runs.

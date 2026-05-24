@@ -42,6 +42,7 @@ jobs:
       - name: Debug GitHub Variables
         run: |
           echo "github.event_name: ${{ github.event_name }}"
+          echo "github.event.action: ${{ github.event.action }}"
           echo "github.ref_name: ${{ github.ref_name }}"
           echo "github.event.release.tag_name: ${{ github.event.release.tag_name }}"
           echo "github.event.repository.default_branch: ${{ github.event.repository.default_branch }}"
@@ -80,6 +81,29 @@ jobs:
           manifest["version"] = version
           manifest_path.write_text(f"{json.dumps(manifest, indent=2)}\n")
           PY
+
+      - name: Resolve release target branch
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.draft == false }}
+        run: |
+          release_target_branch="${{ github.event.release.target_commitish }}"
+          if ! git ls-remote --exit-code --heads origin "${release_target_branch}" >/dev/null; then
+            echo "::error::Release target must be an existing branch: ${release_target_branch}"
+            exit 1
+          fi
+          echo "RELEASE_TARGET_BRANCH=${release_target_branch}" >> "$GITHUB_ENV"
+
+      - name: Commit released integration versions
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.draft == false }}
+        run: |
+          if git diff --quiet -- custom_components/lost_apple/const.py custom_components/lost_apple/manifest.json; then
+            echo "Released integration versions already match ${RELEASE_VERSION}."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/lost_apple/const.py custom_components/lost_apple/manifest.json
+          git commit -m "Release Lost Apple Integration ${RELEASE_VERSION}"
+          git push origin "HEAD:refs/heads/${RELEASE_TARGET_BRANCH}"
 
       - name: Create Lost Apple Integration zip
         run: |

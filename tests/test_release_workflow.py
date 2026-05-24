@@ -14,3 +14,15 @@ def test_release_workflow_guards_version_tag_normalization() -> None:
     assert "${RELEASE_TAG#v}" not in release_workflow
     assert r"^v?([0-9]+)\.([0-9]+)\.([0-9]+)" in release_workflow
     assert '[[ "${release_version}" =~ ^v[0-9] ]]' in release_workflow
+
+
+def test_release_workflow_persists_version_metadata_updates() -> None:
+    """Verify release events commit version metadata updates back to the branch."""
+    release_workflow = (PROJECT_ROOT / ".github/workflows/release.yml").read_text()
+
+    assert "Commit released integration versions" in release_workflow
+    assert "github.event.action == 'published'" in release_workflow
+    assert "custom_components/lost_apple/const.py" in release_workflow
+    assert "custom_components/lost_apple/manifest.json" in release_workflow
+    assert "git ls-remote --exit-code --heads origin" in release_workflow
+    assert 'git push origin "HEAD:refs/heads/${RELEASE_TARGET_BRANCH}"' in release_workflow
