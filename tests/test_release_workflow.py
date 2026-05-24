@@ -21,6 +21,8 @@ def test_release_workflow_persists_version_metadata_updates() -> None:
     release_workflow = (PROJECT_ROOT / ".github/workflows/release.yml").read_text()
 
     assert "Commit released integration versions" in release_workflow
+    assert "github.event.action == 'published'" in release_workflow
     assert "custom_components/lost_apple/const.py" in release_workflow
     assert "custom_components/lost_apple/manifest.json" in release_workflow
-    assert 'git push origin "HEAD:${{ github.event.release.target_commitish }}"' in release_workflow
+    assert "git ls-remote --exit-code --heads origin" in release_workflow
+    assert 'git push origin "HEAD:refs/heads/${RELEASE_TARGET_BRANCH}"' in release_workflow
