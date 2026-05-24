@@ -1,123 +1,59 @@
-name: Release Lost Apple Integration
-
+name: Update Version and Create Zip on Release
 on:
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: Integration version to package
-        required: true
-        type: string
   release:
-    types: [published, edited]
+    types: [published]
 
 permissions:
   contents: write
 
-env:
-  RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag_name }}
-
 jobs:
-  release-assets:
-    name: Build integration release asset
+  update_version_and_create_zip:
+    name: Update Version and Create Zip on Release
     runs-on: ubuntu-latest
-    if: github.event.repository.fork == false
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
+          # Use the release branch when available so git-auto-commit can push
+          # back cleanly; otherwise keep the workflow's triggering ref.
           ref: ${{ github.event_name == 'release' && github.event.release.target_commitish || github.ref }}
 
-      - name: Resolve release version
+      - name: Update Version Metadata
+        if: ${{ github.event_name == 'release' }}
+        env:
+          RELEASE_VERSION: ${{ github.event.release.tag_name }}
+        run: python3 .github/scripts/update_release_version.py "${RELEASE_VERSION}"
+
+      - name: Commit & Push Version Changes
+        if: ${{ github.event_name == 'release' && github.event.release.prerelease == false  }}
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          branch: ${{ github.event.release.target_commitish }}
+          commit_message: 'Updating to version ${{ github.event.release.tag_name }} [skip ci]'
+
+      - name: Update Release with Version Changes Commit
+        if: ${{ github.event_name == 'release' && github.event.release.prerelease == false  }}
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          if [[ ! "${RELEASE_TAG}" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::Release tag must be a semantic version, optionally prefixed with v: ${RELEASE_TAG}"
-            exit 1
-          fi
-          release_version="${RELEASE_TAG}"
-          if [[ "${release_version}" =~ ^v[0-9] ]]; then
-            release_version="${release_version#v}"
-          fi
-          echo "RELEASE_VERSION=${release_version}" >> "$GITHUB_ENV"
+          git check-ref-format "refs/tags/${RELEASE_TAG}"
+          git tag -f -- "${RELEASE_TAG}"
+          git push -f origin -- "${RELEASE_TAG}"
 
-      - name: Debug GitHub Variables
-        run: |
-          echo "github.event_name: ${{ github.event_name }}"
-          echo "github.event.action: ${{ github.event.action }}"
-          echo "github.ref_name: ${{ github.ref_name }}"
-          echo "github.event.release.tag_name: ${{ github.event.release.tag_name }}"
-          echo "github.event.repository.default_branch: ${{ github.event.repository.default_branch }}"
-          echo "github.event.release.target_commitish: ${{ github.event.release.target_commitish }}"
-          echo "github.event.release.prerelease: ${{ github.event.release.prerelease }}"
-          echo "github.event.release.draft: ${{ github.event.release.draft }}"
-          echo "RELEASE_TAG: ${RELEASE_TAG}"
-          echo "RELEASE_VERSION: ${RELEASE_VERSION}"
-
-      - name: Update Lost Apple Integration versions
-        if: ${{ github.event_name == 'workflow_dispatch' || github.event.release.draft == false }}
-        run: |
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-          import re
-
-          version = os.environ["RELEASE_VERSION"]
-
-          const_path = Path("custom_components/lost_apple/const.py")
-          const_text = const_path.read_text()
-          const_text, replacement_count = re.subn(
-              r'^VERSION: Final = "[^"]*"$',
-              f'VERSION: Final = "{version}"',
-              const_text,
-              count=1,
-              flags=re.MULTILINE,
-          )
-          if replacement_count != 1:
-              raise SystemExit("Unable to update VERSION in const.py")
-          const_path.write_text(const_text)
-
-          manifest_path = Path("custom_components/lost_apple/manifest.json")
-          manifest = json.loads(manifest_path.read_text())
-          manifest["version"] = version
-          manifest_path.write_text(f"{json.dumps(manifest, indent=2)}\n")
-          PY
-
-      - name: Resolve release target branch
-        if: ${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.draft == false }}
-        run: |
-          release_target_branch="${{ github.event.release.target_commitish }}"
-          if ! git ls-remote --exit-code --heads origin "${release_target_branch}" >/dev/null; then
-            echo "::error::Release target must be an existing branch: ${release_target_branch}"
-            exit 1
-          fi
-          echo "RELEASE_TARGET_BRANCH=${release_target_branch}" >> "$GITHUB_ENV"
-
-      - name: Commit released integration versions
-        if: ${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.draft == false }}
-        run: |
-          if git diff --quiet -- custom_components/lost_apple/const.py custom_components/lost_apple/manifest.json; then
-            echo "Released integration versions already match ${RELEASE_VERSION}."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add custom_components/lost_apple/const.py custom_components/lost_apple/manifest.json
-          git commit -m "Release Lost Apple Integration ${RELEASE_VERSION}"
-          git push origin "HEAD:refs/heads/${RELEASE_TARGET_BRANCH}"
-
-      - name: Create Lost Apple Integration zip
+      - name: Create Zip
         run: |
           cd "${{ github.workspace }}/custom_components/lost_apple"
-          zip lost_apple.zip -r ./
+          zip "lost_apple.zip" -r ./
 
-      - name: Upload Lost Apple Integration zip to Release
-        if: ${{ github.event_name == 'release' && github.event.release.draft == false }}
+      - name: Upload Zip to Release
+        if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v3
         with:
           files: ./custom_components/lost_apple/lost_apple.zip
-          tag_name: ${{ env.RELEASE_TAG }}
+          tag_name: ${{ github.event.release.tag_name }}
 
-      - name: Add Lost Apple Integration zip to Action
+      - name: Add Zip to Action
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v7
         with:
