@@ -1,4 +1,6 @@
-# Hass Lost Apple
+# Lost Apple for Home Assistant
+
+![Lost Apple logo](docs/assets/lost-apple-logo.svg)
 
 `hass-lost-apple` provides the Lost Apple App and Lost Apple Integration for official Apple Find My devices using FindMy.py with local anisette.
 
