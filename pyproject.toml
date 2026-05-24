@@ -1,6 +1,6 @@
 [project]
 name = "hass-lost-apple-integration"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Home Assistant custom integration for the Lost Apple App"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -24,6 +24,9 @@ test = [
 
 [tool.setuptools]
 packages = []
+
+[tool.setuptools.dynamic]
+version = { attr = "custom_components.lost_apple.const.VERSION" }
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
