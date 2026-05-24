@@ -239,3 +239,15 @@ Re-ran the required full verification commands:
 - `./.venv/bin/pytest`
   - PASS
   - 43 passed, 13 warnings
+
+## Task 11 Container Image Release Workflow (2026-05-23)
+
+- Added `.github/workflows/release-app-images.yml` to build and publish Home Assistant App images from `app/lost_apple/Dockerfile` using repository root context.
+- The workflow targets both HA app image repos expected by `app/lost_apple/config.yaml`:
+  - `ghcr.io/snuffy2/hass-lost-apple-amd64`
+  - `ghcr.io/snuffy2/hass-lost-apple-aarch64`
+- Trigger matrix:
+  - Pushes to `initial-development` for validation only (no publish)
+  - Tag pushes matching `v*` for publish
+  - `workflow_dispatch` for manual publish
+- Package write permissions are intentionally scoped to this workflow and publishing only occurs on tag/manual runs.
