@@ -4,16 +4,6 @@
 
 | Name                                              |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
 |-------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
-| app/src/lost\_apple\_app/\_\_init\_\_.py          |        0 |        0 |        0 |        0 |    100% |           |
-| app/src/lost\_apple\_app/\_\_main\_\_.py          |       59 |        5 |       10 |        4 |     87% |53, 57, 63-\>65, 70, 103, 112 |
-| app/src/lost\_apple\_app/api.py                   |       43 |        3 |       14 |        1 |     89% |     70-73 |
-| app/src/lost\_apple\_app/auth.py                  |       11 |        0 |        2 |        0 |    100% |           |
-| app/src/lost\_apple\_app/config.py                |       41 |        8 |       12 |        3 |     79% |19-21, 23-24, 32-33, 61 |
-| app/src/lost\_apple\_app/findmy\_client.py        |      114 |       46 |       38 |        3 |     51% |165-170, 185, 191, 200-\>202, 210-213, 218-242, 247-255, 260-264, 269-278 |
-| app/src/lost\_apple\_app/models.py                |       23 |        0 |        0 |        0 |    100% |           |
-| app/src/lost\_apple\_app/polling.py               |       52 |        4 |        8 |        2 |     90% |72, 79, 103-104 |
-| app/src/lost\_apple\_app/storage.py               |       97 |        2 |       16 |        2 |     96% |   86, 104 |
-| app/src/lost\_apple\_app/web.py                   |      134 |       31 |       24 |        7 |     75% |80-81, 102, 108, 121-128, 136, 414-416, 439-447, 460, 477, 482-485, 492-494, 518-519 |
 | custom\_components/lost\_apple/\_\_init\_\_.py    |       13 |        0 |        0 |        0 |    100% |           |
 | custom\_components/lost\_apple/api\_client.py     |       23 |       13 |        4 |        0 |     37% |27-31, 35-39, 43-48 |
 | custom\_components/lost\_apple/config\_flow.py    |       23 |        1 |        2 |        0 |     96% |        38 |
@@ -24,7 +14,7 @@
 | custom\_components/lost\_apple/entity.py          |       49 |        6 |       16 |        6 |     82% |21, 25, 32, 35, 42, 78 |
 | custom\_components/lost\_apple/repairs.py         |        1 |        1 |        0 |        0 |      0% |         3 |
 | custom\_components/lost\_apple/sensor.py          |       36 |        0 |        6 |        0 |    100% |           |
-| **TOTAL**                                         |  **795** |  **121** |  **168** |   **29** | **81%** |           |
+| **TOTAL**                                         |  **221** |   **22** |   **44** |    **7** | **88%** |           |
 
 
 ## Setup coverage badge
