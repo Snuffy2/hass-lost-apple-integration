@@ -398,7 +398,7 @@ def register_web_routes(app: FastAPI, storage: AppStorage) -> None:  # noqa: C90
     @app.get("/", include_in_schema=False)
     async def root() -> RedirectResponse:
         """Redirect the app panel root to the setup page."""
-        return RedirectResponse(url="/setup")
+        return RedirectResponse(url="setup")
 
     @app.get("/setup", response_class=HTMLResponse)
     async def setup() -> str:

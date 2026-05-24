@@ -143,14 +143,14 @@ async def test_app_root_redirects_to_setup_page(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Ingress panel root should lead users to the setup UI."""
+    """Ingress panel root should redirect without escaping the ingress prefix."""
     app = await _make_app(tmp_path, monkeypatch)
     client = TestClient(app, follow_redirects=False)
 
     response = client.get("/")
 
     assert response.status_code == 307
-    assert response.headers["location"] == "/setup"
+    assert response.headers["location"] == "setup"
 
 
 @pytest.mark.anyio
