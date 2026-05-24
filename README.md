@@ -7,14 +7,14 @@
 | custom\_components/lost\_apple/\_\_init\_\_.py    |       13 |        0 |        0 |        0 |    100% |           |
 | custom\_components/lost\_apple/api\_client.py     |       23 |       13 |        4 |        0 |     37% |27-31, 35-39, 43-48 |
 | custom\_components/lost\_apple/config\_flow.py    |       23 |        1 |        2 |        0 |     96% |        38 |
-| custom\_components/lost\_apple/const.py           |        5 |        0 |        0 |        0 |    100% |           |
+| custom\_components/lost\_apple/const.py           |        6 |        0 |        0 |        0 |    100% |           |
 | custom\_components/lost\_apple/coordinator.py     |       15 |        0 |        0 |        0 |    100% |           |
 | custom\_components/lost\_apple/device\_tracker.py |       36 |        0 |        6 |        0 |    100% |           |
 | custom\_components/lost\_apple/diagnostics.py     |       20 |        1 |       10 |        1 |     93% |        30 |
 | custom\_components/lost\_apple/entity.py          |       49 |        6 |       16 |        6 |     82% |21, 25, 32, 35, 42, 78 |
 | custom\_components/lost\_apple/repairs.py         |        1 |        1 |        0 |        0 |      0% |         3 |
 | custom\_components/lost\_apple/sensor.py          |       36 |        0 |        6 |        0 |    100% |           |
-| **TOTAL**                                         |  **221** |   **22** |   **44** |    **7** | **88%** |           |
+| **TOTAL**                                         |  **222** |   **22** |   **44** |    **7** | **88%** |           |
 
 
 ## Setup coverage badge
