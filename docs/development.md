@@ -13,24 +13,19 @@ Run the project checks from the repository root with the repo-local venv:
 ```bash
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
-./.venv/bin/mypy app/src custom_components tests
+./.venv/bin/mypy custom_components tests
 ./.venv/bin/pytest
 ```
 
 ## Release workflow notes
 
-Container images for the Lost Apple App are built from:
-- `app/lost_apple/Dockerfile`
-- repository root as Docker build context
+GitHub releases for this repository publish the HACS zip for the Lost Apple Integration.
 
 The publish workflow is `.github/workflows/release.yml`.
 
 - It runs:
-  - on pushes to `main`
   - on published or edited GitHub releases
-  - on `workflow_dispatch` with an image tag input
-- It publishes a multi-platform image to `ghcr.io/snuffy2/hass-lost-apple`.
-- It tags images as:
-  - `edge` for pushes to `main`
-  - the release semver and `latest` for non-prerelease GitHub releases
-  - the raw `workflow_dispatch` input for manual runs
+  - on `workflow_dispatch` with an integration version input
+- It updates `custom_components/lost_apple/manifest.json` with the release tag in the checked-out workspace.
+- It packages `custom_components/lost_apple` as `lost_apple.zip`.
+- It uploads the zip to the GitHub release, or as a workflow artifact for manual runs.

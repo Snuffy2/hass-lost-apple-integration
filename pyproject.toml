@@ -1,18 +1,12 @@
 [project]
-name = "hass-lost-apple"
+name = "hass-lost-apple-integration"
 version = "0.1.0"
-description = "Home Assistant App and custom integration for Apple Find My devices via FindMy.py"
+description = "Home Assistant custom integration for the Lost Apple App"
 readme = "README.md"
 requires-python = ">=3.14"
 license = "GPL-3.0-or-later"
 authors = [{ name = "snuffy2" }]
-dependencies = [
-  "aiosqlite>=0.20.0",
-  "fastapi>=0.115.0",
-  "findmy>=0.10.0",
-  "pydantic>=2.10.0",
-  "uvicorn[standard]>=0.32.0",
-]
+dependencies = []
 
 [project.optional-dependencies]
 test = [
@@ -28,11 +22,11 @@ test = [
   "pytest-timeout>=2.3.1",
 ]
 
-[tool.setuptools.packages.find]
-where = ["app/src"]
+[tool.setuptools]
+packages = []
 
 [tool.pytest.ini_options]
-pythonpath = ["app/src", "."]
+pythonpath = ["."]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = """
@@ -40,7 +34,6 @@ addopts = """
   --timeout=20
   --durations=10
   -o console_output_style=progress
-  --cov=app/src/lost_apple_app
   --cov=custom_components.lost_apple
   --cov-fail-under=70
   --cov-report=term-missing
@@ -124,7 +117,7 @@ fixture-parentheses = false
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
-known-third-party = ["fastapi", "findmy", "homeassistant", "pydantic", "pytest"]
+known-third-party = ["homeassistant", "pytest"]
 combine-as-imports = true
 split-on-trailing-comma = false
 
@@ -144,15 +137,14 @@ convention = "google"
   "S108",
   "SLF001",
 ]
-"app/src/lost_apple_app/models.py" = ["TC003"]
 
 [tool.codespell]
 ignore-words-list = "hass"
 
 [tool.mypy]
 python_version = "3.14"
-files = ["app/src/lost_apple_app", "custom_components/lost_apple", "tests"]
-mypy_path = ["app/src", "."]
+files = ["custom_components/lost_apple", "tests"]
+mypy_path = ["."]
 check_untyped_defs = true
 explicit_package_bases = true
 namespace_packages = true
@@ -166,7 +158,7 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 branch = true
-source = ["app/src/lost_apple_app", "custom_components/lost_apple"]
+source = ["custom_components/lost_apple"]
 relative_files = true
 parallel = false
 

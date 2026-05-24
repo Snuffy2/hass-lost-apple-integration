@@ -51,21 +51,15 @@ language_version = "python3.14"
 pass_filenames = false
 args = [
   "--config-file=pyproject.toml",
-  "app/src/lost_apple_app",
   "custom_components/lost_apple",
   "tests",
 ]
 additional_dependencies = [
   "aioresponses",
-  "aiosqlite",
-  "fastapi",
-  "findmy",
   "homeassistant",
   "pytest",
   "pytest-asyncio",
   "pytest-homeassistant-custom-component",
-  "types-PyYAML",
-  "uvicorn[standard]",
 ]
 
 [[repos]]

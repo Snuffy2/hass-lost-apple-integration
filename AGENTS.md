@@ -2,12 +2,11 @@
 
 ## Project Scope
 
-This repository contains two deliverables:
+This repository contains one deliverable:
 
-- Lost Apple App: the Home Assistant App package and FastAPI service under `app/`.
 - Lost Apple Integration: the Home Assistant custom integration under `custom_components/lost_apple/`.
 
-Use these names consistently in documentation and release notes.
+Use this name consistently in documentation and release notes. The companion Lost Apple App lives in `~/GitHub/hass-lost-apple-app`.
 
 ## Repository Files
 
