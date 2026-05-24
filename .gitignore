@@ -11,3 +11,5 @@ htmlcov/
 .coverage
 *.egg-info/
 MEMORY.md
+.codex
+.coderabbit.yaml

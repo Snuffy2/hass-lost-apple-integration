@@ -1,1 +1,1 @@
-"""Test package for hass-lost-apple."""
+"""Test package for the Lost Apple Integration."""
